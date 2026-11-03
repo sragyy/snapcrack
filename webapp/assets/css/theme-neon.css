@@ -473,3 +473,8 @@ body::after {
 @media (max-width: 960px) { .fab-creations { width: 52px; height: 52px; } .fab-creations .fab-label { display: none; } }
 /* Icône du champ lien TikTok visible */
 #tiktokUrl + span, #tiktokUrl ~ span { color: var(--neon-c); }
+
+/* Filigrane dans les grandes cartes */
+.hero-card > .hero-wm { position: absolute !important; z-index: 0 !important; right: 70px; bottom: -34px; color: rgba(255,255,255,.07); pointer-events: none; transform: rotate(-12deg); }
+.hero-wm svg { width: 170px; height: 170px; }
+@media (max-width: 960px) { .hero-wm { display: none; } }

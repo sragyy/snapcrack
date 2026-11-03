@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="assets/css/design-system.css"/>
 <link rel="stylesheet" href="assets/css/app.css"/>
 <link rel="stylesheet" href="assets/css/theme-neon.css"/>
+<link rel="stylesheet" href="assets/css/motion.css"/>
 <link rel="stylesheet" href="assets/css/mascot.css"/>
 </head>
 <body>
@@ -30,6 +31,7 @@
   el.innerHTML = `
     <!-- Bandeau d'accueil -->
     <section class="welcome-hero">
+      <div class="wh-grid" aria-hidden="true"></div>
       <div class="wh-copy">
         <div class="wh-kicker">Bienvenue sur</div>
         <h1 class="wh-title">CAROU<span>BOT</span></h1>
@@ -37,7 +39,7 @@
         <p class="wh-sub-mobile">Crée, Analyse, Performe</p>
       </div>
       <div class="wh-stage" aria-hidden="true">
-        <div class="wh-ring r1"></div><div class="wh-ring r2"></div><div class="wh-ring r3"></div>
+        <div class="wh-ring r3"></div><div class="wh-ring wave"></div><div class="wh-ring wave w2"></div><div class="wh-ring r1"></div><div class="wh-ring r2"></div>
         <div class="wh-beam"></div>
         <div class="wh-float f1">${I.image}</div>
         <div class="wh-float f2">${I.layers}</div>
@@ -49,6 +51,7 @@
     <!-- Deux grandes cartes -->
     <div class="grid grid-2 hero-row">
       <a href="carouslide.html" class="card hero-card hero-violet">
+        <span class="hero-wm">${I.image}</span>
         <div class="hero-ico">${I.image}</div>
         <div class="hero-txt">
           <h2>CarouSlide</h2>
@@ -58,6 +61,7 @@
         <span class="hero-go">${I.arrowRight}</span>
       </a>
       <a href="carouradar.html" class="card hero-card hero-cyan">
+        <span class="hero-wm">${I.radar}</span>
         <div class="hero-ico">${I.radar}</div>
         <div class="hero-txt">
           <h2>CarouRadar</h2>
@@ -138,5 +142,6 @@
   drawDots();
 })();
 </script>
+<script src="assets/js/motion.js"></script>
 </body>
 </html>
