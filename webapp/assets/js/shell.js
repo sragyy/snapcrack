@@ -9,12 +9,13 @@
   const page = window.CAROUBOT_PAGE || "home";
 
   const NAV = [
-    { id: "home",       label: "Accueil",      icon: I.home,   href: "index.html" },
-    { id: "carouslide", label: "CarouSlide",   icon: I.slide,  href: "carouslide.html", badge: '<span class="badge badge-violet nav-badge">Studio</span>' },
-    { id: "carouradar", label: "CarouRadar",   icon: I.radar,  href: "carouradar.html" },
-    { id: "albums",     label: "Mes Albums",   icon: I.albums, href: "albums.html" },
-    { id: "creations",  label: "Mes Créations",icon: I.layers, href: "creations.html" },
-    { id: "account",    label: "Compte",       icon: I.account,href: "compte.html" },
+    { id: "home",       label: "Accueil",       icon: I.home,    href: "index.html" },
+    { id: "carouslide", label: "CarouSlide",    icon: I.slide,   href: "carouslide.html" },
+    { id: "carouradar", label: "CarouRadar",    icon: I.radar,   href: "carouradar.html" },
+    { id: "albums",     label: "Mes albums",    icon: I.folder,  href: "albums.html" },
+    { id: "creations",  label: "Mes créations", icon: I.layers,  href: "creations.html" },
+    { id: "account",    label: "Abonnements",   icon: I.crown,   href: "compte.html" },
+    { id: "aide",       label: "Aide / Support",icon: I.headset, href: "aide.html" },
   ];
 
   // Ordre bottom nav mobile : CarouRadar · CarouSlide · Accueil(centre) · Albums · Compte
@@ -32,10 +33,10 @@
   /* ---------- SIDEBAR ---------- */
   const sidebar = `
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-logo">C</div>
-        <div class="brand-name">CAROUBOT<small>STUDIO</small></div>
-      </div>
+      <a class="sidebar-brand" href="index.html">
+        <div class="brand-logo">${window.CAROUBOT_MASCOT ? window.CAROUBOT_MASCOT.mark(34) : "C"}</div>
+        <div class="brand-name"><span class="bn-carou">CAROU</span><span class="bn-bot">BOT</span><small>STUDIO</small></div>
+      </a>
       <nav class="sidebar-nav">
         <div class="nav-group-label">Navigation</div>
         ${NAV.map(n => `
@@ -61,11 +62,13 @@
       <button class="icon-btn topbar-toggle" id="btnSidebarToggle" aria-label="Menu">${I.menu}</button>
       <label class="topbar-search">
         ${I.search}
-        <input type="search" placeholder="Rechercher un carrousel, un album, une création…" aria-label="Rechercher"/>
+        <input type="search" placeholder="Rechercher un projet, un album…" aria-label="Rechercher"/>
+        <span class="kbd">⌘ K</span>
       </label>
       <div class="topbar-right">
         <div class="credits-chip" title="Solde de crédits">
           ${I.coin}<span class="mono">${creditsText}</span><span class="credits-chip-label">crédits</span>
+          <a class="credits-add" href="compte.html" aria-label="Recharger des crédits">${I.plus}</a>
         </div>
         <button class="icon-btn" aria-label="Notifications">${I.bell}<span class="ping"></span></button>
         <button class="profile-btn" aria-label="Profil">

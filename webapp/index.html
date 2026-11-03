@@ -58,29 +58,25 @@
       </a>
     </div>
 
-    <!-- Crédits + stats réelles -->
-    <div class="grid grid-4" style="margin-bottom:22px">
+    <!-- Stat tiles (valeurs réelles / placeholders honnêtes) -->
+    <div class="grid grid-4 stat-row" style="margin-bottom:22px">
       <div class="card stat-card">
-        <div class="stat-ico violet">${I.coin}</div>
-        <div class="stat-val mono">—</div>
-        <div class="stat-label">Solde de crédits</div>
-        <div class="notice" style="margin-top:10px">${I.alert} En attente de connexion au backend</div>
+        <div class="stat-ico amber">${I.coin}</div>
+        <div><div class="stat-val mono">—</div><div class="stat-label">Crédits disponibles</div></div>
+        <span class="stat-flag" title="En attente de connexion au backend">${I.alert}</span>
       </div>
       <div class="card stat-card">
-        <div class="stat-ico cyan">${I.layers}</div>
-        <div class="stat-val mono">${nbCreations}</div>
-        <div class="stat-label">Créations (cet appareil)</div>
+        <div class="stat-ico violet">${I.bolt}</div>
+        <div><div class="stat-val mono">${nbCreations}</div><div class="stat-label">Carrousels créés</div></div>
       </div>
       <div class="card stat-card">
-        <div class="stat-ico cyan">${I.checkCircle}</div>
-        <div class="stat-val mono">${nbDone}</div>
-        <div class="stat-label">Terminées</div>
+        <div class="stat-ico cyan">${I.chart}</div>
+        <div><div class="stat-val mono">—</div><div class="stat-label">Performance moyenne</div></div>
+        <span class="stat-flag" title="En attente de connexion au backend">${I.alert}</span>
       </div>
       <div class="card stat-card">
-        <div class="stat-ico violet">${I.albums}</div>
-        <div class="stat-val mono">—</div>
-        <div class="stat-label">Albums</div>
-        <div class="notice" style="margin-top:10px">${I.alert} En attente backend</div>
+        <div class="stat-ico gold">${I.crown}</div>
+        <div><div class="stat-val" style="font-size:19px">Abonnement</div><div class="stat-label">— (en attente backend)</div></div>
       </div>
     </div>
 
@@ -93,10 +89,14 @@
       ${quick("compte.html", I.cart, "Recharger des crédits", "Packs & abonnements")}
     </div>
 
-    <!-- Dernières créations -->
+    <!-- Mes créations récentes -->
     <div class="section-head">
-      <h2 class="section-title">${I.clock} Dernières créations</h2>
-      <a href="creations.html" class="btn btn-ghost btn-sm">Tout voir ${I.arrowRight}</a>
+      <h2 class="section-title">${I.layers} Mes créations récentes</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="icon-btn" id="carPrev" aria-label="Précédent">${I.chevL}</button>
+        <button class="icon-btn" id="carNext" aria-label="Suivant">${I.chevR}</button>
+        <a href="creations.html" class="btn btn-ghost btn-sm">Voir tout ${I.arrowRight}</a>
+      </div>
     </div>
     <div id="homeCreations"></div>
   `;
@@ -109,29 +109,34 @@
   }
 
   const wrap = document.getElementById("homeCreations");
+  const prev = document.getElementById("carPrev");
+  const next = document.getElementById("carNext");
   if (!nbCreations) {
+    prev.style.display = next.style.display = "none";
     wrap.innerHTML = `<div class="empty">${I.layers}
       <h4>Vous n'avez pas encore de création</h4>
-      <p class="section-sub">Lancez votre première génération depuis CarouSlide.</p>
+      <p class="section-sub">Lancez votre première génération depuis CarouSlide. Vos carrousels générés apparaîtront ici (aucun exemple fictif n'est affiché).</p>
       <a class="btn btn-primary" href="carouslide.html" style="margin-top:14px">${I.slide} Ouvrir CarouSlide</a>
     </div>`;
   } else {
-    wrap.className = "grid grid-3";
-    wrap.innerHTML = creations.slice(0, 6).map(c => `
-      <div class="card card-hover">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="creation-thumb">${I.slide}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700">${c.title}</div>
-            <div class="section-sub">${c.images} images · ${c.lang.toUpperCase()}</div>
-          </div>
+    wrap.className = "hcarousel";
+    wrap.innerHTML = creations.slice(0, 12).map(c => `
+      <a class="card card-hover hcard" href="creations.html">
+        <div class="hcard-thumb">${I.slide}
+          ${c.status === "pending_backend"
+            ? `<span class="badge badge-warning hcard-badge"><span class="dot"></span>En attente</span>`
+            : c.status === "running"
+            ? `<span class="badge badge-cyan hcard-badge"><span class="dot"></span>${c.progress}%</span>`
+            : `<span class="badge badge-success hcard-badge"><span class="dot"></span>Terminé</span>`}
         </div>
-        ${c.status === "pending_backend"
-          ? `<div class="notice" style="margin-top:14px">${I.alert} En attente backend — non exécuté</div>`
-          : c.status === "running"
-          ? `<div class="progress" style="margin-top:14px"><span style="width:${c.progress}%"></span></div>`
-          : `<div class="badge badge-success" style="margin-top:14px"><span class="dot"></span>Terminé</div>`}
-      </div>`).join("");
+        <div class="hcard-body">
+          <div class="hcard-title">${c.title}</div>
+          <div class="section-sub">${I.image} ${c.slides} slides · ${c.images} images · ${c.lang.toUpperCase()}</div>
+        </div>
+      </a>`).join("");
+    const step = () => (wrap.querySelector(".hcard")?.offsetWidth || 260) + 16;
+    prev.addEventListener("click", () => wrap.scrollBy({ left: -step() * 2, behavior: "smooth" }));
+    next.addEventListener("click", () => wrap.scrollBy({ left: step() * 2, behavior: "smooth" }));
   }
 })();
 </script>

@@ -18,11 +18,14 @@
 
   /* --- Couleurs néon --- */
   --cyan: #22d3ee;
-  --cyan-bright: #38e0ff;
+  --cyan-bright: #45e5ff;
   --cyan-soft: rgba(34, 211, 238, 0.14);
+  --blue: #3b82f6;
+  --blue-elec: #2a8bff;
   --violet: #a855f7;
   --violet-bright: #c084fc;
   --violet-soft: rgba(168, 85, 247, 0.16);
+  --magenta: #d946ef;
   --pink: #f472b6;
 
   /* --- Texte --- */
@@ -44,15 +47,18 @@
 
   /* --- Dégradés --- */
   --grad-violet: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #d946ef 100%);
-  --grad-cyan: linear-gradient(135deg, #0891b2 0%, #22d3ee 50%, #67e8f9 100%);
+  --grad-cyan: linear-gradient(135deg, #0ea5e9 0%, #22d3ee 50%, #67e8f9 100%);
   --grad-mix: linear-gradient(135deg, #22d3ee 0%, #6366f1 50%, #a855f7 100%);
   --grad-surface: linear-gradient(160deg, rgba(29,36,82,0.9) 0%, rgba(14,18,42,0.9) 100%);
 
-  /* --- Lueurs --- */
-  --glow-cyan: 0 0 0 1px rgba(34,211,238,0.35), 0 0 24px rgba(34,211,238,0.25);
-  --glow-violet: 0 0 0 1px rgba(168,85,247,0.4), 0 0 26px rgba(168,85,247,0.28);
-  --shadow-card: 0 18px 50px -18px rgba(0,0,0,0.75);
-  --shadow-float: 0 24px 60px -16px rgba(0,0,0,0.85);
+  /* --- Lueurs (intensifiées, style néon de la maquette) --- */
+  --glow-cyan: 0 0 0 1px rgba(69,229,255,0.55), 0 0 22px rgba(34,211,238,0.5), 0 0 48px rgba(34,211,238,0.3);
+  --glow-violet: 0 0 0 1px rgba(192,132,252,0.55), 0 0 22px rgba(168,85,247,0.5), 0 0 48px rgba(168,85,247,0.32);
+  --glow-blue: 0 0 0 1px rgba(59,130,246,0.5), 0 0 22px rgba(42,139,255,0.45), 0 0 46px rgba(42,139,255,0.28);
+  /* lueur douce permanente sur les cartes */
+  --rim-cyan: 0 0 0 1px rgba(60,180,255,0.18), 0 0 20px -4px rgba(42,139,255,0.35);
+  --shadow-card: 0 18px 50px -18px rgba(0,0,0,0.8), 0 0 0 1px rgba(80,160,255,0.08), 0 0 24px -8px rgba(42,139,255,0.25);
+  --shadow-float: 0 24px 60px -16px rgba(0,0,0,0.9), 0 0 30px -6px rgba(42,139,255,0.35);
 
   /* --- Géométrie --- */
   --radius-sm: 10px;
@@ -154,12 +160,14 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: var(--grad-mix);
   border: none;
   color: #fff;
-  box-shadow: 0 8px 26px -8px rgba(99,102,241,0.7);
+  box-shadow: 0 8px 26px -8px rgba(99,102,241,0.8), 0 0 18px -2px rgba(42,139,255,0.5);
 }
-.btn-primary:hover { box-shadow: 0 10px 34px -6px rgba(99,102,241,0.9); }
+.btn-primary:hover { box-shadow: 0 10px 34px -6px rgba(99,102,241,0.95), 0 0 26px 0 rgba(42,139,255,0.6); }
 
-.btn-violet { background: var(--grad-violet); border: none; color: #fff; box-shadow: 0 8px 26px -8px rgba(168,85,247,0.7); }
-.btn-cyan   { background: var(--grad-cyan);  border: none; color: #04121a; box-shadow: 0 8px 26px -8px rgba(34,211,238,0.6); }
+.btn-violet { background: var(--grad-violet); border: none; color: #fff; box-shadow: 0 8px 26px -8px rgba(168,85,247,0.8), 0 0 18px -2px rgba(168,85,247,0.55); }
+.btn-violet:hover { box-shadow: 0 10px 34px -6px rgba(168,85,247,0.95), 0 0 26px 0 rgba(168,85,247,0.6); }
+.btn-cyan   { background: var(--grad-cyan);  border: none; color: #04121a; box-shadow: 0 8px 26px -8px rgba(34,211,238,0.7), 0 0 18px -2px rgba(34,211,238,0.6); }
+.btn-cyan:hover { box-shadow: 0 10px 34px -6px rgba(34,211,238,0.9), 0 0 26px 0 rgba(34,211,238,0.7); }
 
 .btn-ghost { background: transparent; border-color: var(--border); }
 .btn-ghost:hover { background: var(--surface); }
@@ -177,13 +185,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 .card {
   position: relative;
   background: var(--grad-surface);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(90,150,255,0.18);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 22px;
   transition: transform var(--t), box-shadow var(--t), border-color var(--t);
 }
-.card-hover:hover { transform: translateY(-4px); border-color: var(--border-strong); box-shadow: var(--shadow-float); }
+.card-hover:hover { transform: translateY(-4px); border-color: var(--border-cyan); box-shadow: var(--shadow-float), var(--glow-cyan); }
 
 /* Carte avec liseré lumineux au survol */
 .card-glow::after {

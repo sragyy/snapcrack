@@ -46,5 +46,10 @@ window.ICON = (function () {
     star:      s('<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.6 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>'),
     receipt:   s('<path d="M5 3v18l2-1.5L9 21l2-1.5L13 21l2-1.5L17 21l2-1.5V3l-2 1.5L15 3l-2 1.5L11 3 9 4.5 7 3z"/><path d="M8 8h8M8 12h8"/>'),
     bolt:      s('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
+    crown:     s('<path d="M3 7l4 4 5-7 5 7 4-4-2 12H5z"/><path d="M5 20h14"/>'),
+    headset:   s('<path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="7" rx="1.5"/><rect x="17.5" y="13" width="4" height="7" rx="1.5"/><path d="M20 19a3 3 0 0 1-3 3h-3"/>'),
+    chart:     s('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+    plusCircle:s('<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'),
+    grid:      s('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
   };
 })();

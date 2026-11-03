@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>CAROUBOT — Aide / Support</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css"/>
+<link rel="stylesheet" href="assets/css/app.css"/>
+</head>
+<body>
+<div id="app"></div>
+
+<script>window.CAROUBOT_PAGE = "aide"; window.CAROUBOT_CREDITS = null;</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/mascot.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+(function () {
+  const I = window.ICON;
+  const el = window.CAROUBOT_SHELL.pageEl;
+
+  const faqs = [
+    ["Combien coûte une génération ?", "7 crédits CAROUBOT par image générée. Le coût total s'affiche en temps réel dans CarouSlide avant toute confirmation."],
+    ["Dans quelles langues puis-je générer ?", "Français, anglais, espagnol, allemand et italien — sélectionnables dans les paramètres de CarouSlide."],
+    ["Comment fonctionne CarouRadar ?", "Le Radar effectue une collecte à la demande (avec un cache partagé) des carrousels TikTok les plus performants. Aucune collecte automatique n'est lancée."],
+    ["L'ordre de mes slides est-il conservé ?", "Oui. L'ordre défini dans CarouSlide (par glisser-déposer) est conservé lors de la génération."],
+    ["Mes crédits sont-ils partagés avec le bot Telegram ?", "Oui, une fois le backend connecté : le solde est commun à la WebApp et au bot Telegram."],
+  ];
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">${I.headset} Aide / Support</h1>
+      <p class="page-subtitle">Trouvez une réponse ou contactez l'équipe CAROUBOT.</p>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 2fr 1fr; gap:22px" class="col-split">
+      <div class="card">
+        <h2 class="section-title" style="margin-bottom:16px">${I.support} Questions fréquentes</h2>
+        <div id="faq" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <div class="card">
+          <h2 class="section-title" style="margin-bottom:12px">${I.bell} Contacter le support</h2>
+          <p class="section-sub" style="margin-bottom:14px">Un souci de génération, de crédits ou de paiement ? Écrivez-nous.</p>
+          <button class="btn btn-cyan btn-block" id="btnContact" style="margin-bottom:10px">${I.support} Ouvrir un ticket</button>
+          <button class="btn btn-ghost btn-block">${I.globe} Centre d'aide en ligne</button>
+          <div class="notice" style="margin-top:14px">${I.alert} Messagerie support non connectée — elle sera reliée au backend.</div>
+        </div>
+        <div class="card">
+          <h2 class="section-title" style="margin-bottom:12px">${I.bolt} Raccourcis</h2>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <a class="btn btn-ghost btn-block" href="carouslide.html">${I.slide} Créer un carrousel</a>
+            <a class="btn btn-ghost btn-block" href="compte.html">${I.crown} Gérer mon abonnement</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("faq").innerHTML = faqs.map(([q, a], i) => `
+    <details class="faq-item" ${i===0?"open":""}>
+      <summary>${q}</summary>
+      <p>${a}</p>
+    </details>`).join("");
+
+  document.getElementById("btnContact").addEventListener("click", () =>
+    toast("Messagerie support à connecter au backend", "cyan"));
+})();
+</script>
+</body>
+</html>
