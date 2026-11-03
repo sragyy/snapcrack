@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>CAROUBOT — Accueil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css"/>
+<link rel="stylesheet" href="assets/css/app.css"/>
+<link rel="stylesheet" href="assets/css/mascot.css"/>
+</head>
+<body>
+<div id="app"></div>
+
+<script>window.CAROUBOT_PAGE = "home"; window.CAROUBOT_CREDITS = null; /* null = non connecté */</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/mascot.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+(function () {
+  const I = window.ICON;
+  const el = window.CAROUBOT_SHELL.pageEl;
+  const creations = window.CAROUBOT_STORE.getCreations();
+  const nbCreations = creations.length;
+  const nbDone = creations.filter(c => c.status === "done").length;
+
+  el.innerHTML = `
+    <div class="page-head" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div>
+        <h1 class="page-title">Bonjour 👋 <span class="gradient-text">bienvenue sur CAROUBOT</span></h1>
+        <p class="page-subtitle">Créez et analysez vos carrousels TikTok depuis un seul studio.</p>
+      </div>
+      ${window.CAROUBOT_MASCOT.inline(96)}
+    </div>
+
+    <!-- Deux grandes cartes -->
+    <div class="grid grid-2" style="margin-bottom:22px">
+      <a href="carouslide.html" class="card card-hover card-glow hero-card hero-violet">
+        <div class="hero-ico">${I.slide}</div>
+        <div class="hero-txt">
+          <span class="badge badge-violet">Studio de génération</span>
+          <h2>CarouSlide</h2>
+          <p class="text-muted">Importez vos slides ou un lien TikTok, choisissez vos variations et générez vos carrousels.</p>
+        </div>
+        <span class="hero-go">${I.arrowRight}</span>
+      </a>
+      <a href="carouradar.html" class="card card-hover card-glow hero-card hero-cyan">
+        <div class="hero-ico">${I.radar}</div>
+        <div class="hero-txt">
+          <span class="badge badge-cyan">Veille & tendances</span>
+          <h2>CarouRadar</h2>
+          <p class="text-muted">Repérez les carrousels TikTok les plus performants et envoyez-les vers CarouSlide.</p>
+        </div>
+        <span class="hero-go">${I.arrowRight}</span>
+      </a>
+    </div>
+
+    <!-- Crédits + stats réelles -->
+    <div class="grid grid-4" style="margin-bottom:22px">
+      <div class="card stat-card">
+        <div class="stat-ico violet">${I.coin}</div>
+        <div class="stat-val mono">—</div>
+        <div class="stat-label">Solde de crédits</div>
+        <div class="notice" style="margin-top:10px">${I.alert} En attente de connexion au backend</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-ico cyan">${I.layers}</div>
+        <div class="stat-val mono">${nbCreations}</div>
+        <div class="stat-label">Créations (cet appareil)</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-ico cyan">${I.checkCircle}</div>
+        <div class="stat-val mono">${nbDone}</div>
+        <div class="stat-label">Terminées</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-ico violet">${I.albums}</div>
+        <div class="stat-val mono">—</div>
+        <div class="stat-label">Albums</div>
+        <div class="notice" style="margin-top:10px">${I.alert} En attente backend</div>
+      </div>
+    </div>
+
+    <!-- Accès rapide -->
+    <div class="section-head"><h2 class="section-title">${I.bolt} Accès rapide</h2></div>
+    <div class="grid grid-4" style="margin-bottom:26px">
+      ${quick("carouslide.html", I.upload, "Nouvelle génération", "Importer des slides")}
+      ${quick("carouradar.html", I.trending, "Explorer les tendances", "CarouRadar France")}
+      ${quick("albums.html", I.folder, "Mes albums", "Organiser mes carrousels")}
+      ${quick("compte.html", I.cart, "Recharger des crédits", "Packs & abonnements")}
+    </div>
+
+    <!-- Dernières créations -->
+    <div class="section-head">
+      <h2 class="section-title">${I.clock} Dernières créations</h2>
+      <a href="creations.html" class="btn btn-ghost btn-sm">Tout voir ${I.arrowRight}</a>
+    </div>
+    <div id="homeCreations"></div>
+  `;
+
+  function quick(href, icon, title, sub) {
+    return `<a href="${href}" class="card card-hover quick-card">
+      <div class="quick-ico">${icon}</div>
+      <div><div class="quick-title">${title}</div><div class="quick-sub">${sub}</div></div>
+    </a>`;
+  }
+
+  const wrap = document.getElementById("homeCreations");
+  if (!nbCreations) {
+    wrap.innerHTML = `<div class="empty">${I.layers}
+      <h4>Vous n'avez pas encore de création</h4>
+      <p class="section-sub">Lancez votre première génération depuis CarouSlide.</p>
+      <a class="btn btn-primary" href="carouslide.html" style="margin-top:14px">${I.slide} Ouvrir CarouSlide</a>
+    </div>`;
+  } else {
+    wrap.className = "grid grid-3";
+    wrap.innerHTML = creations.slice(0, 6).map(c => `
+      <div class="card card-hover">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="creation-thumb">${I.slide}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700">${c.title}</div>
+            <div class="section-sub">${c.images} images · ${c.lang.toUpperCase()}</div>
+          </div>
+        </div>
+        ${c.status === "pending_backend"
+          ? `<div class="notice" style="margin-top:14px">${I.alert} En attente backend — non exécuté</div>`
+          : c.status === "running"
+          ? `<div class="progress" style="margin-top:14px"><span style="width:${c.progress}%"></span></div>`
+          : `<div class="badge badge-success" style="margin-top:14px"><span class="dot"></span>Terminé</div>`}
+      </div>`).join("");
+  }
+})();
+</script>
+</body>
+</html>

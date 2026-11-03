@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>CAROUBOT — CarouSlide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css"/>
+<link rel="stylesheet" href="assets/css/app.css"/>
+</head>
+<body>
+<div id="app"></div>
+
+<script>window.CAROUBOT_PAGE = "carouslide"; window.CAROUBOT_CREDITS = null;</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+(function () {
+  const I = window.ICON;
+  const CFG = window.CAROUBOT_CONFIG;
+  const el = window.CAROUBOT_SHELL.pageEl;
+
+  // ----- état -----
+  const state = {
+    slides: [],            // { id, src, name }
+    variations: 1,         // variations par slide
+    lang: "fr",
+  };
+
+  // Transfert éventuel depuis CarouRadar
+  const transfer = window.CAROUBOT_STORE.takeTransfer();
+  if (transfer.length) {
+    transfer.forEach(t => state.slides.push({ id: uid(), src: null, name: t.title || "Carrousel importé (Radar)", fromRadar: true }));
+  }
+
+  function uid() { return "s_" + Math.random().toString(36).slice(2, 9); }
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">${I.slide} CarouSlide <span class="badge badge-violet">Studio</span></h1>
+      <p class="page-subtitle">Importez vos slides ou un lien TikTok, choisissez vos variations, puis générez vos carrousels. L'ordre des slides est conservé.</p>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 360px; align-items:start; gap:22px" id="csLayout">
+      <!-- Colonne gauche : import + slides -->
+      <div style="display:flex;flex-direction:column;gap:22px">
+
+        <!-- Import -->
+        <div class="card">
+          <div class="section-head" style="margin-bottom:14px">
+            <h2 class="section-title">${I.upload} Importer</h2>
+          </div>
+          <div class="dropzone" id="dropzone">
+            ${I.upload}
+            <h4>Glissez vos images ici</h4>
+            <p class="section-sub">ou cliquez pour parcourir — PNG, JPG, WEBP</p>
+            <input type="file" id="fileInput" accept="image/*" multiple hidden/>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+            <label class="field-label" style="width:100%;margin:0">Ou coller un lien TikTok</label>
+            <div style="flex:1;display:flex;gap:10px;min-width:220px">
+              <div style="flex:1;position:relative;display:flex;align-items:center">
+                <span style="position:absolute;left:14px;color:var(--text-dim);display:flex">${I.link}</span>
+                <input class="field" id="tiktokUrl" style="padding-left:42px" placeholder="https://www.tiktok.com/@.../photo/..."/>
+              </div>
+              <button class="btn btn-cyan" id="btnImportLink">Importer</button>
+            </div>
+          </div>
+          ${CFG.backendConnected ? "" : `<div class="notice" style="margin-top:14px">${I.alert} Extraction TikTok non connectée — un emplacement de slide est ajouté, l'import réel se fera une fois le backend relié.</div>`}
+        </div>
+
+        <!-- Slides -->
+        <div class="card">
+          <div class="section-head" style="margin-bottom:14px">
+            <h2 class="section-title">${I.layers} Mes slides <span class="badge" id="slideCount">0</span></h2>
+            <button class="btn btn-ghost btn-sm" id="btnClear">${I.trash} Tout vider</button>
+          </div>
+          <div id="slidesWrap"></div>
+        </div>
+      </div>
+
+      <!-- Colonne droite : réglages + récap -->
+      <div style="display:flex;flex-direction:column;gap:22px;position:sticky;top:90px">
+        <div class="card">
+          <h2 class="section-title" style="margin-bottom:16px">${I.settings} Réglages</h2>
+
+          <label class="field-label">Variations par slide</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px">
+            <div class="stepper">
+              <button id="varMinus" aria-label="Moins">−</button>
+              <span class="val" id="varVal">1</span>
+              <button id="varPlus" aria-label="Plus">+</button>
+            </div>
+            <span class="section-sub">1 à 10</span>
+          </div>
+
+          <label class="field-label" for="langSel">Langue des textes</label>
+          <select class="field" id="langSel" style="margin-bottom:4px">
+            ${CFG.languages.map(l => `<option value="${l.code}">${l.flag} ${l.label}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title" style="margin-bottom:16px">${I.sparkles} Récapitulatif</h2>
+          <div class="recap">
+            <div class="recap-row"><span class="k">Slides</span><span class="v mono" id="rSlides">0</span></div>
+            <div class="recap-row"><span class="k">Variations / slide</span><span class="v mono" id="rVar">1</span></div>
+            <div class="recap-row"><span class="k">Images générées</span><span class="v mono" id="rImages">0</span></div>
+            <div class="recap-row recap-total"><span class="k">Crédits nécessaires</span><span class="v mono" id="rCredits">0</span></div>
+          </div>
+          <div class="section-sub" style="margin-top:6px">${CFG.pricing.creditsPerImage} crédits CAROUBOT par image générée.</div>
+          <button class="btn btn-primary btn-block" id="btnGenerate" style="margin-top:18px" disabled>${I.sparkles} Confirmer la génération</button>
+          ${CFG.backendConnected ? "" : `<div class="notice" style="margin-top:12px">${I.alert} Backend non connecté : aucune image ne sera réellement générée et aucun crédit ne sera débité.</div>`}
+        </div>
+      </div>
+    </div>
+
+    <!-- zone progression -->
+    <div id="progressZone" style="margin-top:22px"></div>
+  `;
+
+  // ---------- Références ----------
+  const slidesWrap = document.getElementById("slidesWrap");
+  const fileInput = document.getElementById("fileInput");
+  const dropzone = document.getElementById("dropzone");
+
+  // ---------- Import fichiers ----------
+  dropzone.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", e => addFiles(e.target.files));
+  ["dragenter", "dragover"].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add("hover"); }));
+  ["dragleave", "drop"].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove("hover"); }));
+  dropzone.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+  function addFiles(files) {
+    [...files].filter(f => f.type.startsWith("image/")).forEach(f => {
+      const reader = new FileReader();
+      reader.onload = ev => { state.slides.push({ id: uid(), src: ev.target.result, name: f.name }); render(); };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  // ---------- Import lien TikTok ----------
+  document.getElementById("btnImportLink").addEventListener("click", () => {
+    const url = document.getElementById("tiktokUrl").value.trim();
+    if (!url) { toast("Collez d'abord un lien TikTok", "cyan"); return; }
+    if (!/tiktok\.com/i.test(url)) { toast("Lien TikTok invalide", "violet"); return; }
+    if (CFG.backendConnected) {
+      // TODO: POST CFG.api.tiktokImport { url } -> récupérer les slides
+      toast("Import TikTok lancé…", "cyan");
+    } else {
+      state.slides.push({ id: uid(), src: null, name: "Slide TikTok (à extraire)", fromLink: true });
+      document.getElementById("tiktokUrl").value = "";
+      toast("Emplacement ajouté — extraction en attente du backend", "cyan");
+      render();
+    }
+  });
+
+  // ---------- Vider ----------
+  document.getElementById("btnClear").addEventListener("click", () => { state.slides = []; render(); });
+
+  // ---------- Stepper variations ----------
+  const varVal = document.getElementById("varVal");
+  document.getElementById("varMinus").addEventListener("click", () => { state.variations = Math.max(1, state.variations - 1); render(); });
+  document.getElementById("varPlus").addEventListener("click", () => { state.variations = Math.min(10, state.variations + 1); render(); });
+
+  // ---------- Langue ----------
+  document.getElementById("langSel").addEventListener("change", e => { state.lang = e.target.value; });
+
+  // ---------- Génération ----------
+  document.getElementById("btnGenerate").addEventListener("click", onGenerate);
+
+  function onGenerate() {
+    if (!state.slides.length) return;
+    const images = state.slides.length * state.variations;
+    const credits = images * CFG.pricing.creditsPerImage;
+    const job = window.CAROUBOT_STORE.addPendingJob({
+      title: `Carrousel — ${state.slides.length} slides`,
+      slides: state.slides.length, images, lang: state.lang, credits,
+    });
+
+    const zone = document.getElementById("progressZone");
+    if (!CFG.backendConnected) {
+      zone.innerHTML = `
+        <div class="card">
+          <div class="section-head"><h2 class="section-title">${I.clock} Génération enregistrée</h2>${statusBadge("pending_backend")}</div>
+          <div class="notice">${I.alert} Le backend n'est pas connecté. La demande (<b>${images} images</b>, ${credits} crédits) est enregistrée dans « Mes créations » avec le statut « en attente ». <b>Aucune image n'a été générée et aucun crédit n'a été débité.</b></div>
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <a class="btn btn-ghost btn-sm" href="creations.html">${I.layers} Voir mes créations</a>
+            <button class="btn btn-ghost btn-sm" onclick="window.CAROUBOT_SHELL.openDrawer()">Ouvrir le panneau</button>
+          </div>
+        </div>`;
+      toast("Demande enregistrée (backend non connecté)", "violet");
+      return;
+    }
+
+    // --- Backend connecté : suivi réel de la progression ---
+    zone.innerHTML = `
+      <div class="card">
+        <div class="section-head"><h2 class="section-title">${I.clock} Génération en cours</h2><span id="pStatus">${statusBadge("running")}</span></div>
+        <div class="progress"><span id="pBar" style="width:0%"></span></div>
+        <div class="section-sub" id="pText" style="margin-top:10px">Initialisation…</div>
+      </div>`;
+    pollJob(job.id, images, credits);
+  }
+
+  async function pollJob(jobId, images, credits) {
+    // Appel réel : POST createJob puis GET jobStatus/:id en boucle.
+    try {
+      const res = await fetch(CFG.api.createJob, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variations: state.variations, lang: state.lang,
+          slides: state.slides.map(s => ({ name: s.name })) }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const { id } = await res.json();
+      const timer = setInterval(async () => {
+        const st = await fetch(CFG.api.jobStatus + id).then(r => r.json());
+        document.getElementById("pBar").style.width = st.progress + "%";
+        document.getElementById("pText").textContent = st.message || (st.progress + "%");
+        window.CAROUBOT_STORE.updateJob(jobId, { progress: st.progress, status: st.status });
+        if (st.status === "done" || st.status === "error") {
+          clearInterval(timer);
+          document.getElementById("pStatus").innerHTML = statusBadge(st.status);
+        }
+      }, 1500);
+    } catch (e) {
+      window.CAROUBOT_STORE.updateJob(jobId, { status: "error", error: String(e) });
+      document.getElementById("pStatus").innerHTML = statusBadge("error");
+      document.getElementById("pText").textContent = "Erreur : " + e.message;
+    }
+  }
+
+  function statusBadge(s) {
+    if (s === "done")  return `<span class="badge badge-success"><span class="dot"></span>Terminé</span>`;
+    if (s === "error") return `<span class="badge badge-danger"><span class="dot"></span>Erreur</span>`;
+    if (s === "pending_backend") return `<span class="badge badge-warning"><span class="dot"></span>En attente backend</span>`;
+    return `<span class="badge badge-cyan"><span class="dot"></span>En cours</span>`;
+  }
+
+  // ---------- Rendu slides + drag reorder ----------
+  let dragId = null;
+  function render() {
+    // récap
+    const n = state.slides.length;
+    const images = n * state.variations;
+    document.getElementById("slideCount").textContent = n;
+    document.getElementById("rSlides").textContent = n;
+    document.getElementById("rVar").textContent = state.variations;
+    varVal.textContent = state.variations;
+    document.getElementById("rImages").textContent = images;
+    document.getElementById("rCredits").textContent = (images * CFG.pricing.creditsPerImage).toLocaleString("fr-FR");
+    document.getElementById("btnGenerate").disabled = n === 0;
+
+    if (!n) {
+      slidesWrap.innerHTML = `<div class="empty">${I.image}<h4>Aucune slide importée</h4><p class="section-sub">Importez des images ou collez un lien TikTok ci-dessus.</p></div>`;
+      return;
+    }
+    slidesWrap.className = "slides-grid";
+    slidesWrap.innerHTML = state.slides.map((s, i) => `
+      <div class="slide-card" draggable="true" data-id="${s.id}">
+        <span class="slide-index">${i + 1}</span>
+        <div class="slide-actions"><button data-del="${s.id}" aria-label="Supprimer">${I.trash}</button></div>
+        ${s.src ? `<img src="${s.src}" alt="${s.name}"/>` : `<div class="ph">${I.image}<span>${s.name}</span></div>`}
+        <span class="slide-drag" title="Glisser pour réordonner">${I.drag}</span>
+        <span class="slide-variations">×${state.variations}</span>
+      </div>`).join("");
+
+    slidesWrap.querySelectorAll("[data-del]").forEach(b =>
+      b.addEventListener("click", () => { state.slides = state.slides.filter(x => x.id !== b.dataset.del); render(); }));
+
+    slidesWrap.querySelectorAll(".slide-card").forEach(card => {
+      card.addEventListener("dragstart", () => { dragId = card.dataset.id; card.classList.add("dragging"); });
+      card.addEventListener("dragend", () => { dragId = null; card.classList.remove("dragging"); slidesWrap.querySelectorAll(".slide-card").forEach(c => c.classList.remove("drag-over")); });
+      card.addEventListener("dragover", e => { e.preventDefault(); card.classList.add("drag-over"); });
+      card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
+      card.addEventListener("drop", e => {
+        e.preventDefault();
+        const from = state.slides.findIndex(x => x.id === dragId);
+        const to = state.slides.findIndex(x => x.id === card.dataset.id);
+        if (from < 0 || to < 0 || from === to) return;
+        const [m] = state.slides.splice(from, 1);
+        state.slides.splice(to, 0, m);
+        render();
+      });
+    });
+  }
+
+  render();
+  if (transfer.length) toast(transfer.length + " carrousel(s) importé(s) depuis le Radar", "cyan");
+})();
+</script>
+</body>
+</html>

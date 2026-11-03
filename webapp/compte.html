@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>CAROUBOT — Compte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css"/>
+<link rel="stylesheet" href="assets/css/app.css"/>
+</head>
+<body>
+<div id="app"></div>
+
+<script>window.CAROUBOT_PAGE = "account"; window.CAROUBOT_CREDITS = null;</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+(function () {
+  const I = window.ICON;
+  const CFG = window.CAROUBOT_CONFIG;
+  const el = window.CAROUBOT_SHELL.pageEl;
+  const sym = CFG.pricing.currencySymbol;
+
+  // Packs = offres (constantes produit, pas des données client inventées).
+  const packs = [
+    { name: "Découverte", price: 9,  credits: 300,  feats: ["~42 images générées", "Accès CarouSlide", "Support e-mail"], featured: false },
+    { name: "Créateur",   price: 29, credits: 1200, feats: ["~171 images générées", "CarouSlide + CarouRadar", "Albums illimités", "Support prioritaire"], featured: true },
+    { name: "Studio",     price: 79, credits: 4000, feats: ["~571 images générées", "Toutes les fonctionnalités", "File d'attente prioritaire", "Support dédié"], featured: false },
+  ];
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">${I.account} Compte & Abonnements</h1>
+      <p class="page-subtitle">Votre profil, vos crédits et vos offres CAROUBOT.</p>
+    </div>
+
+    <div class="grid col-split" style="grid-template-columns: 1fr 1fr; gap:22px; margin-bottom:22px">
+      <!-- Profil -->
+      <div class="card">
+        <div class="profile-head">
+          <div class="big-avatar">U</div>
+          <div>
+            <h2 style="font-size:20px">Utilisateur CAROUBOT</h2>
+            <p class="section-sub">Non connecté — profil chargé depuis <code>${CFG.api.me}</code></p>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <span class="badge">${I.globe} France</span>
+              <span class="badge badge-warning"><span class="dot"></span>Hors ligne</span>
+            </div>
+          </div>
+        </div>
+        <div class="notice" style="margin-top:16px">${I.alert} Les comptes utilisateurs et les crédits partagés avec le bot Telegram seront reliés via le backend. Aucune donnée réelle n'est affichée tant que la connexion n'est pas établie.</div>
+      </div>
+
+      <!-- Crédits + renouvellement -->
+      <div class="card">
+        <h2 class="section-title" style="margin-bottom:16px">${I.coin} Solde de crédits</h2>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <div class="stat-val mono" style="font-size:42px">—</div>
+          <div class="section-sub">crédits CAROUBOT</div>
+        </div>
+        <div class="recap" style="margin-top:14px">
+          <div class="recap-row"><span class="k">Abonnement actif</span><span class="v">—</span></div>
+          <div class="recap-row"><span class="k">Renouvellement</span><span class="v">—</span></div>
+          <div class="recap-row"><span class="k">Coût par image</span><span class="v mono">${CFG.pricing.creditsPerImage} crédits</span></div>
+        </div>
+        <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="document.getElementById('packs').scrollIntoView({behavior:'smooth'})">${I.cart} Recharger des crédits</button>
+      </div>
+    </div>
+
+    <!-- Packs -->
+    <div class="section-head" id="packs"><h2 class="section-title">${I.bolt} Packs & Abonnements</h2></div>
+    <div class="grid grid-3" style="margin-bottom:22px">
+      ${packs.map(p => `
+        <div class="card plan-card ${p.featured?'featured':''}">
+          ${p.featured ? `<span class="badge badge-violet" style="align-self:flex-start">${I.star} Populaire</span>` : ""}
+          <h3 style="font-size:19px">${p.name}</h3>
+          <div class="plan-price">${p.price}${sym} <small>/ ${p.credits.toLocaleString("fr-FR")} crédits</small></div>
+          <ul class="plan-feats">${p.feats.map(f => `<li>${I.check} ${f}</li>`).join("")}</ul>
+          <button class="btn ${p.featured?'btn-violet':'btn-ghost'} btn-block btnBuy">${I.cart} Choisir</button>
+        </div>`).join("")}
+    </div>
+    <div class="notice" style="margin-bottom:22px">${I.alert} Paiements Stripe non connectés : les boutons prépareront la commande une fois <code>${CFG.api.billing}</code> relié. Aucune transaction réelle n'est effectuée ici.</div>
+
+    <!-- Historique + support -->
+    <div class="grid col-split" style="grid-template-columns: 2fr 1fr; gap:22px">
+      <div class="card">
+        <h2 class="section-title" style="margin-bottom:16px">${I.receipt} Historique des achats</h2>
+        <div class="empty" style="padding:30px">${I.receipt}<h4>Aucun achat</h4><p class="section-sub">Votre historique s'affichera ici après connexion au backend.</p></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title" style="margin-bottom:16px">${I.support} Support</h2>
+        <p class="section-sub" style="margin-bottom:14px">Une question, un souci de génération ou de crédits ? Notre équipe vous répond.</p>
+        <button class="btn btn-cyan btn-block" style="margin-bottom:10px">${I.support} Contacter le support</button>
+        <button class="btn btn-ghost btn-block">${I.globe} Centre d'aide</button>
+      </div>
+    </div>
+  `;
+
+  el.querySelectorAll(".btnBuy").forEach(b => b.addEventListener("click", () =>
+    toast("Commande en attente — paiement Stripe à connecter", "violet")));
+})();
+</script>
+</body>
+</html>

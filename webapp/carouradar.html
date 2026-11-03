@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>CAROUBOT — CarouRadar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/design-system.css"/>
+<link rel="stylesheet" href="assets/css/app.css"/>
+</head>
+<body>
+<div id="app"></div>
+
+<script>window.CAROUBOT_PAGE = "carouradar"; window.CAROUBOT_CREDITS = null;</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/shell.js"></script>
+<script>
+(function () {
+  const I = window.ICON;
+  const CFG = window.CAROUBOT_CONFIG;
+  const R = CFG.radar;
+  const el = window.CAROUBOT_SHELL.pageEl;
+
+  const state = { country: "FR", period: "7d", sort: "views", page: 1, perPage: 10, results: [], selected: new Set(), collected: false };
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">${I.radar} CarouRadar <span class="badge badge-cyan">Tendances</span></h1>
+      <p class="page-subtitle">Repérez les carrousels TikTok les plus performants, puis envoyez votre sélection vers CarouSlide. Collecte à la demande, cache partagé.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:22px">
+      <div class="toolbar" style="margin-bottom:0">
+        <div>
+          <label class="field-label">Pays</label>
+          <div class="seg" id="segCountry">
+            ${R.countries.map(c => `<button data-country="${c.code}" class="${c.code===state.country?'active':''}">${c.flag} ${c.label}</button>`).join("")}
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Période</label>
+          <div class="seg" id="segPeriod">
+            ${R.periods.map(p => `<button data-period="${p.code}" class="${p.code===state.period?'active':''}">${p.label}</button>`).join("")}
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Classement</label>
+          <div class="seg" id="segSort">
+            ${R.sorts.map(s => `<button data-sort="${s.code}" class="${s.code===state.sort?'active':''}">${s.label}</button>`).join("")}
+          </div>
+        </div>
+        <div style="margin-left:auto;align-self:flex-end">
+          <button class="btn btn-cyan" id="btnCollect">${I.radar} Lancer la collecte</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="radarResults"></div>
+    <div id="radarActionBar"></div>
+    <div id="radarPagination"></div>
+  `;
+
+  // Filtres
+  bindSeg("segCountry", "country");
+  bindSeg("segPeriod", "period");
+  bindSeg("segSort", "sort", renderResults);
+  function bindSeg(id, key, cb) {
+    document.getElementById(id).addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      state[key] = b.dataset[key] || b.dataset[Object.keys(b.dataset)[0]];
+      document.querySelectorAll(`#${id} button`).forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      if (cb) cb();
+    });
+  }
+
+  document.getElementById("btnCollect").addEventListener("click", collect);
+
+  async function collect() {
+    const btn = document.getElementById("btnCollect");
+    btn.disabled = true; btn.innerHTML = `${I.clock} Collecte…`;
+    try {
+      if (!CFG.backendConnected) throw { notConnected: true };
+      const res = await fetch(CFG.api.radarSearch, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ country: state.country, period: state.period, sort: state.sort }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      state.results = await res.json();
+      state.collected = true; state.page = 1; state.selected.clear();
+      renderResults();
+    } catch (e) {
+      state.collected = true; state.results = [];
+      document.getElementById("radarResults").innerHTML = `
+        <div class="card">
+          <div class="notice">${I.alert} ${e.notConnected
+            ? "Backend CarouRadar non connecté. Aucune collecte réelle n'est effectuée et aucune donnée n'est inventée. Une fois le service relié (<code>" + CFG.api.radarSearch + "</code>), les carrousels tendance s'afficheront ici."
+            : "La collecte a échoué : " + (e.message||e)}</div>
+        </div>`;
+      document.getElementById("radarActionBar").innerHTML = "";
+      document.getElementById("radarPagination").innerHTML = "";
+    } finally {
+      btn.disabled = false; btn.innerHTML = `${I.radar} Relancer la collecte`;
+    }
+  }
+
+  function renderResults() {
+    const wrap = document.getElementById("radarResults");
+    if (!state.collected) {
+      wrap.innerHTML = `<div class="empty">${I.radar}
+        <h4>Lancez une collecte pour voir les tendances</h4>
+        <p class="section-sub">Choisissez un pays, une période et un classement, puis cliquez sur « Lancer la collecte ». Aucune collecte automatique n'est effectuée.</p></div>`;
+      return;
+    }
+    if (!state.results.length) { return; } // notice déjà affichée par collect()
+
+    // tri
+    const sorted = [...state.results].sort((a, b) =>
+      state.sort === "views" ? b.views - a.views : b.revenue - a.revenue);
+    const start = (state.page - 1) * state.perPage;
+    const rows = sorted.slice(start, start + state.perPage);
+
+    wrap.innerHTML = `
+      <div class="card" style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr>
+            <th style="width:40px"></th><th style="width:48px">#</th><th>Carrousel</th>
+            <th>Vues</th><th>Ventes</th><th>CA estimé</th><th>Engagement</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${rows.map((r, i) => `
+              <tr class="${state.selected.has(r.id)?'selected':''}" data-id="${r.id}">
+                <td><span class="ck ${state.selected.has(r.id)?'checked':''}" data-ck="${r.id}">${I.check}</span></td>
+                <td><span class="rank-badge ${start+i<3?'top':''}">${start + i + 1}</span></td>
+                <td><div style="display:flex;align-items:center;gap:12px"><span class="cell-thumb">${I.slide}</span><div><div style="font-weight:700">${r.title}</div><div class="section-sub">${r.author}</div></div></div></td>
+                <td class="mono">${fmt(r.views)}</td>
+                <td class="mono">${fmt(r.sales)}</td>
+                <td class="mono">${fmt(r.revenue)} ${CFG.pricing.currencySymbol}</td>
+                <td><span class="badge badge-cyan">${r.engagement}%</span></td>
+                <td><button class="btn btn-ghost btn-sm" data-one="${r.id}">${I.arrowRight} Slide</button></td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+
+    wrap.querySelectorAll("[data-ck]").forEach(c => c.addEventListener("click", () => toggle(c.dataset.ck)));
+    wrap.querySelectorAll("tr[data-id]").forEach(tr => tr.addEventListener("click", e => { if (!e.target.closest("button")) toggle(tr.dataset.id); }));
+    wrap.querySelectorAll("[data-one]").forEach(b => b.addEventListener("click", () => transfer([state.results.find(x => x.id === b.dataset.one)])));
+
+    renderActionBar();
+    renderPagination(sorted.length);
+  }
+
+  function toggle(id) { state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id); renderResults(); }
+
+  function renderActionBar() {
+    const bar = document.getElementById("radarActionBar");
+    if (!state.selected.size) { bar.innerHTML = ""; return; }
+    bar.innerHTML = `
+      <div class="action-bar">
+        <span class="count">${state.selected.size}</span><span>carrousel(s) sélectionné(s)</span>
+        <div style="margin-left:auto;display:flex;gap:10px">
+          <button class="btn btn-ghost btn-sm" id="barClear">Désélectionner</button>
+          <button class="btn btn-primary btn-sm" id="barTransfer">${I.arrowRight} Envoyer vers CarouSlide</button>
+        </div>
+      </div>`;
+    document.getElementById("barClear").addEventListener("click", () => { state.selected.clear(); renderResults(); });
+    document.getElementById("barTransfer").addEventListener("click", () =>
+      transfer(state.results.filter(r => state.selected.has(r.id))));
+  }
+
+  function transfer(items) {
+    if (!items || !items.length) return;
+    window.CAROUBOT_STORE.setTransfer(items.map(r => ({ id: r.id, title: r.title })));
+    window.location.href = "carouslide.html";
+  }
+
+  function renderPagination(total) {
+    const pages = Math.ceil(total / state.perPage);
+    const p = document.getElementById("radarPagination");
+    if (pages <= 1) { p.innerHTML = ""; return; }
+    let html = `<div class="pagination"><button ${state.page===1?'disabled':''} data-go="${state.page-1}">${I.chevL}</button>`;
+    for (let i = 1; i <= pages; i++) html += `<button class="${i===state.page?'active':''}" data-go="${i}">${i}</button>`;
+    html += `<button ${state.page===pages?'disabled':''} data-go="${state.page+1}">${I.chevR}</button></div>`;
+    p.innerHTML = html;
+    p.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { state.page = +b.dataset.go; renderResults(); window.scrollTo({ top: 0, behavior: "smooth" }); }));
+  }
+
+  function fmt(n) { return (n ?? 0).toLocaleString("fr-FR"); }
+  function fmtShort(n){ return n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(1)+"k" : n; }
+
+  renderResults();
+})();
+</script>
+</body>
+</html>

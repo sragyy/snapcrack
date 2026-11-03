@@ -1,0 +1,8 @@
+/* CAROUBOT — Mascotte (animations) */
+.mascot { display:inline-block; filter: drop-shadow(0 10px 24px rgba(34,211,238,.35)); animation: mascotFloat 4s ease-in-out infinite; }
+@keyframes mascotFloat { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-7px); } }
+.mascot-antenna { animation: mascotPulse 2s ease-in-out infinite; transform-origin:center; }
+@keyframes mascotPulse { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.mascot-eye { animation: mascotBlink 5s infinite; transform-origin:center; }
+@keyframes mascotBlink { 0%,94%,100%{ transform: scaleY(1); } 97%{ transform: scaleY(.1); } }
+@media (prefers-reduced-motion: reduce){ .mascot,.mascot-antenna,.mascot-eye{ animation:none; } }
