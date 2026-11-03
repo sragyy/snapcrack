@@ -105,3 +105,25 @@ Testé réellement dans Chromium (Playwright), résolutions ordinateur
   calcul images/crédits (ex. 6 images = 42 crédits) → suppression → confirmation
   → enregistrement dans « Mes créations » avec statut « en attente backend »
   (aucun crédit débité).
+
+## Alignement sur la V9 existante
+
+Après analyse du code de la WebApp V9 (fourni via le script de déploiement),
+cette refonte a été alignée sur les comportements réels du produit :
+- **Variations par slide : 1 à 4** (−/+), 7 crédits par image.
+- **Langue** sélectionnée par pastilles à drapeaux (fr/en/es/de/it).
+- **Mascotte** : réutilisation de l'asset SVG réel du projet
+  (`assets/img/caroubot-mascot.svg`).
+- **Mes albums** : gestionnaire **local fonctionnel** (import d'images →
+  sélection multiple → téléchargement en lot via partage natif, sinon **ZIP
+  généré côté client** sans dépendance ni serveur), repris de la V9. Les
+  carrousels générés par le bot seront synchronisés une fois le backend relié.
+
+La V9, comme cette refonte, est explicitement une démonstration : solde de
+crédits fictif, aucune génération réelle, aucun débit, aucune statistique
+inventée tant que le backend n'est pas connecté.
+
+> ⚠️ Le script `MAJ_CAROUBOT_WEBAPP_V9_REDESIGN.command` déploie en SSH sur le
+> VPS de production (`/home/ubuntu/caroubot_webapp_preview`). Il **n'a pas été
+> exécuté** depuis cette session : le déploiement reste une action manuelle et
+> volontaire de ta part. Le bot Telegram et l'Admin Panel ne sont pas touchés.

@@ -21,90 +21,136 @@
 <script>
 (function () {
   const I = window.ICON;
-  const CFG = window.CAROUBOT_CONFIG;
   const el = window.CAROUBOT_SHELL.pageEl;
 
-  // Les albums viennent du backend (galerie des carrousels générés).
-  // Sans backend : état vide honnête (aucun faux album).
-  const state = { view: "folders", albums: [], images: [], selected: new Set() };
+  /* ------------------------------------------------------------------
+     Gestionnaire d'albums LOCAL — fonctionne sans backend.
+     Les images importées restent dans le navigateur (aucun envoi serveur).
+     Téléchargement : partage natif si dispo, sinon ZIP généré côté client.
+     Les carrousels générés par le bot seront synchronisés plus tard.
+     ------------------------------------------------------------------ */
+  const albums = [];
+  const selected = new Set();
+  let counter = 0;
 
   el.innerHTML = `
     <div class="page-head">
-      <h1 class="page-title">${I.albums} Mes Albums</h1>
-      <p class="page-subtitle">Retrouvez, organisez et téléchargez vos carrousels générés.</p>
+      <h1 class="page-title">${I.folder} Mes Albums <span class="badge badge-cyan">Local</span></h1>
+      <p class="page-subtitle">Importe des images, organise-les en albums et télécharge-les en lot. Fonctionne hors connexion.</p>
     </div>
+
+    <div class="notice" style="margin-bottom:18px">${I.alert} Les carrousels générés par le bot Telegram ne sont pas encore synchronisés. Cet espace gère des albums locaux à cet appareil (rien n'est envoyé à un serveur).</div>
 
     <div class="toolbar">
-      <div class="seg" id="viewSeg">
-        <button data-view="folders" class="active">${I.folder} Dossiers</button>
-        <button data-view="all">${I.image} Toutes les images</button>
-      </div>
-      <button class="btn btn-ghost btn-sm" id="btnNewFolder" style="margin-left:auto">${I.plus} Nouveau dossier</button>
+      <label class="btn btn-primary import-label">${I.plus} Créer un album
+        <input id="albumUpload" type="file" accept="image/*" multiple hidden>
+      </label>
+      <button class="btn btn-ghost btn-sm" id="selectAll">Tout sélectionner</button>
+      <span class="section-sub" id="selLabel" style="margin-left:auto">0 album sélectionné</span>
+      <button class="btn btn-cyan btn-sm" id="saveSel" disabled>${I.download} Enregistrer la sélection</button>
     </div>
 
-    <div id="albumsContent"></div>
-    <div id="albumsActionBar"></div>
+    <div id="albumGrid"></div>
   `;
 
-  document.getElementById("viewSeg").addEventListener("click", e => {
-    const b = e.target.closest("button"); if (!b) return;
-    state.view = b.dataset.view; state.selected.clear();
-    document.querySelectorAll("#viewSeg button").forEach(x => x.classList.remove("active"));
-    b.classList.add("active"); render();
+  const grid = document.getElementById("albumGrid");
+
+  document.getElementById("albumUpload").addEventListener("change", e => {
+    const files = [...e.target.files].filter(f => f.type.startsWith("image/"));
+    if (files.length) {
+      const id = ++counter;
+      albums.push({ id, files: files.map(file => ({ file, url: URL.createObjectURL(file) })) });
+      selected.add(id);
+      render();
+    }
+    e.target.value = "";
   });
-  document.getElementById("btnNewFolder").addEventListener("click", () => {
-    if (CFG.backendConnected) { /* TODO POST /api/albums */ }
-    else toast("Création de dossier disponible une fois le backend connecté", "violet");
+
+  document.getElementById("selectAll").addEventListener("click", () => {
+    if (selected.size === albums.length) selected.clear();
+    else albums.forEach(a => selected.add(a.id));
+    render();
+  });
+  document.getElementById("saveSel").addEventListener("click", () => saveAlbums([...selected]));
+
+  grid.addEventListener("click", e => {
+    const sel = e.target.closest("[data-select]");
+    if (sel) { const id = +sel.dataset.select; selected.has(id) ? selected.delete(id) : selected.add(id); render(); }
+    const one = e.target.closest("[data-save-one]");
+    if (one) saveAlbums([+one.dataset.saveOne]);
   });
 
   function render() {
-    const c = document.getElementById("albumsContent");
-
-    if (!CFG.backendConnected) {
-      c.innerHTML = `<div class="empty">${I.albums}
-        <h4>Aucun album pour le moment</h4>
-        <p class="section-sub">Vos carrousels générés apparaîtront ici une fois CarouSlide et le backend connectés (galerie <code>${CFG.api.albums}</code>). Aucun album de démonstration n'est affiché.</p>
-        <a class="btn btn-primary" href="carouslide.html" style="margin-top:14px">${I.slide} Créer un carrousel</a>
+    grid.className = albums.length ? "grid grid-4" : "";
+    grid.innerHTML = albums.length ? albums.map((a, i) => `
+      <div class="card album-card ${selected.has(a.id) ? "picked" : ""}">
+        <div class="album-cover-mosaic" data-select="${a.id}">
+          ${a.files.slice(0, 4).map(f => `<img src="${f.url}" alt="">`).join("")}
+          <span class="album-check ${selected.has(a.id) ? "on" : ""}">${selected.has(a.id) ? I.check : ""}</span>
+        </div>
+        <div class="album-body">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="album-title">Album ${i + 1}</span>
+            <span class="album-meta">${a.files.length} image(s)</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-ghost btn-sm" data-select="${a.id}" style="flex:1">${selected.has(a.id) ? "Désélectionner" : "Sélectionner"}</button>
+            <button class="btn btn-ghost btn-sm" data-save-one="${a.id}">${I.download}</button>
+          </div>
+        </div>
+      </div>`).join("") : `
+      <div class="empty">${I.image}
+        <h4>Aucun album pour l'instant</h4>
+        <p class="section-sub">Clique sur « Créer un album » et choisis plusieurs images. Tu pourras les sélectionner et les télécharger en lot (ZIP), sans connexion.</p>
       </div>`;
-      document.getElementById("albumsActionBar").innerHTML = "";
-      return;
-    }
 
-    if (state.view === "folders") {
-      if (!state.albums.length) { c.innerHTML = emptyFolders(); return; }
-      c.className = "";
-      c.innerHTML = `<div class="grid grid-4">${state.albums.map(a => `
-        <div class="card card-hover album-card">
-          <div class="album-cover">${I.folder}<span class="badge badge-violet" style="position:absolute;top:10px;right:10px">${a.count}</span></div>
-          <div class="album-body"><div class="album-title">${a.name}</div><div class="album-meta">${a.count} carrousels</div></div>
-        </div>`).join("")}</div>`;
-    } else {
-      if (!state.images.length) { c.innerHTML = emptyFolders(); return; }
-      c.innerHTML = `<div class="gallery-grid">${state.images.map(img => `
-        <div class="gallery-item" data-id="${img.id}">
-          <span class="ck ${state.selected.has(img.id)?'checked':''}" data-ck="${img.id}">${I.check}</span>
-          ${img.src ? `<img src="${img.src}"/>` : I.image}
-          <button class="dl" data-dl="${img.id}">${I.download}</button>
-        </div>`).join("")}</div>`;
-      c.querySelectorAll("[data-ck]").forEach(k => k.addEventListener("click", () => { const id = k.dataset.ck; state.selected.has(id)?state.selected.delete(id):state.selected.add(id); render(); }));
-    }
-    renderBar();
+    const imgs = [...selected].reduce((n, id) => n + (albums.find(a => a.id === id)?.files.length || 0), 0);
+    document.getElementById("selLabel").textContent = `${selected.size} album(s) · ${imgs} image(s)`;
+    document.getElementById("saveSel").disabled = !selected.size;
+    document.getElementById("selectAll").textContent =
+      selected.size === albums.length && albums.length ? "Tout désélectionner" : "Tout sélectionner";
   }
 
-  function emptyFolders() {
-    return `<div class="empty">${I.image}<h4>Vide pour l'instant</h4><p class="section-sub">Générez des carrousels pour remplir vos albums.</p></div>`;
+  // ---------- Téléchargement (partage natif, sinon ZIP client) ----------
+  function safeName(n) { return n.replace(/[^a-z0-9._-]/gi, "_").slice(0, 100); }
+  async function saveAlbums(ids) {
+    const chosen = albums.filter(a => ids.includes(a.id));
+    const files = chosen.flatMap(a => a.files.map((f, i) =>
+      ({ file: f.file, name: `Album_${String(albums.indexOf(a) + 1).padStart(2, "0")}_Slide_${String(i + 1).padStart(2, "0")}_${safeName(f.file.name)}` })));
+    if (!files.length) return;
+    try {
+      if (navigator.canShare && navigator.share && navigator.canShare({ files: files.map(f => f.file) })) {
+        await navigator.share({ files: files.map(f => f.file), title: "CAROUBOT — Mes albums" });
+        return;
+      }
+    } catch (e) { if (e.name === "AbortError") return; }
+    const zip = await buildZip(files);
+    const url = URL.createObjectURL(zip);
+    const a = document.createElement("a");
+    a.href = url; a.download = "CAROUBOT_albums.zip";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    toast("Téléchargement du ZIP lancé", "cyan");
   }
 
-  function renderBar() {
-    const bar = document.getElementById("albumsActionBar");
-    if (!state.selected.size) { bar.innerHTML = ""; return; }
-    bar.innerHTML = `<div class="action-bar"><span class="count">${state.selected.size}</span><span>image(s)</span>
-      <div style="margin-left:auto;display:flex;gap:10px">
-        <button class="btn btn-ghost btn-sm" id="barClear">Annuler</button>
-        <button class="btn btn-primary btn-sm" id="barDl">${I.download} Télécharger la sélection</button>
-      </div></div>`;
-    document.getElementById("barClear").addEventListener("click", () => { state.selected.clear(); render(); });
-    document.getElementById("barDl").addEventListener("click", () => toast("Téléchargement groupé (backend requis)", "cyan"));
+  // Écrivain ZIP minimal (méthode STORE), sans dépendance externe.
+  const crcTable = (() => { let t = []; for (let n = 0; n < 256; n++) { let c = n; for (let j = 0; j < 8; j++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t.push(c >>> 0); } return t; })();
+  function crc32(b) { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = crcTable[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+  const u16 = (d, o, v) => d.setUint16(o, v, true), u32 = (d, o, v) => d.setUint32(o, v, true);
+  async function buildZip(items) {
+    const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
+    for (const item of items) {
+      const name = enc.encode(item.name), data = new Uint8Array(await item.file.arrayBuffer()), crc = crc32(data);
+      const h = new Uint8Array(30 + name.length), d = new DataView(h.buffer);
+      u32(d, 0, 0x04034b50); u16(d, 4, 20); u16(d, 6, 0x800); u16(d, 8, 0); u32(d, 14, crc); u32(d, 18, data.length); u32(d, 22, data.length); u16(d, 26, name.length); h.set(name, 30);
+      parts.push(h, data);
+      const c = new Uint8Array(46 + name.length), v = new DataView(c.buffer);
+      u32(v, 0, 0x02014b50); u16(v, 4, 20); u16(v, 6, 20); u16(v, 8, 0x800); u16(v, 10, 0); u32(v, 16, crc); u32(v, 20, data.length); u32(v, 24, data.length); u16(v, 28, name.length); u32(v, 42, offset); c.set(name, 46);
+      central.push(c); offset += h.length + data.length;
+    }
+    const centralSize = central.reduce((n, c) => n + c.length, 0), end = new Uint8Array(22), e = new DataView(end.buffer);
+    u32(e, 0, 0x06054b50); u16(e, 8, items.length); u16(e, 10, items.length); u32(e, 12, centralSize); u32(e, 16, offset);
+    return new Blob([...parts, ...central, end], { type: "application/zip" });
   }
 
   render();

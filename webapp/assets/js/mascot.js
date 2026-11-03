@@ -45,19 +45,24 @@ window.CAROUBOT_MASCOT = (function () {
       <path d="M50 67 q10 7 20 0" stroke="#45e5ff" stroke-width="3" fill="none" stroke-linecap="round"/>`;
   }
 
+  const ASSET = "assets/img/caroubot-mascot.svg"; // asset réel du projet CAROUBOT
+
   return {
-    // Grande mascotte (dashboard)
+    // Grande mascotte (dashboard) — utilise l'asset SVG réel du projet
     inline(size = 100) {
       return `<div class="mascot" style="width:${size}px;height:${size}px">
-        <svg viewBox="0 0 120 120" width="100%" height="100%" aria-label="Mascotte CAROUBOT">
-          ${head("m" + Math.random().toString(36).slice(2, 6))}
-          <ellipse cx="60" cy="110" rx="30" ry="6" fill="rgba(0,0,0,.4)"/>
-        </svg></div>`;
+        <img src="${ASSET}" alt="Mascotte CAROUBOT" width="100%" height="100%" style="object-fit:contain"/>
+      </div>`;
     },
     // Petit logo-mark (sidebar / topbar)
     mark(size = 34) {
-      const id = "k" + Math.random().toString(36).slice(2, 6);
-      return `<svg viewBox="20 8 80 86" width="${size}" height="${size}" aria-hidden="true" style="display:block">${head(id)}</svg>`;
+      return `<img src="${ASSET}" alt="" aria-hidden="true" width="${size}" height="${size}" style="display:block;object-fit:contain"/>`;
+    },
+    // Version dessinée (secours si l'asset manque)
+    drawn(size = 100) {
+      const id = "m" + Math.random().toString(36).slice(2, 6);
+      return `<div class="mascot" style="width:${size}px;height:${size}px">
+        <svg viewBox="0 0 120 120" width="100%" height="100%" aria-label="Mascotte CAROUBOT">${head(id)}</svg></div>`;
     },
   };
 })();

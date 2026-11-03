@@ -97,20 +97,24 @@
         <div class="card">
           <h2 class="section-title" style="margin-bottom:16px">${I.settings} Réglages</h2>
 
-          <label class="field-label">Variations par slide</label>
+          <label class="field-label">Variations par slide <span class="text-dim">· 7 crédits / image</span></label>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px">
             <div class="stepper">
-              <button id="varMinus" aria-label="Moins">−</button>
+              <button id="varMinus" aria-label="Une variante de moins">−</button>
               <span class="val" id="varVal">1</span>
-              <button id="varPlus" aria-label="Plus">+</button>
+              <button id="varPlus" aria-label="Une variante de plus">+</button>
             </div>
-            <span class="section-sub">1 à 10</span>
+            <span class="section-sub">1 à 4</span>
           </div>
 
-          <label class="field-label" for="langSel">Langue des textes</label>
-          <select class="field" id="langSel" style="margin-bottom:4px">
-            ${CFG.languages.map(l => `<option value="${l.code}">${l.flag} ${l.label}</option>`).join("")}
-          </select>
+          <label class="field-label">Langue des textes</label>
+          <div class="lang-pills" id="langPills">
+            ${CFG.languages.map(l => `
+              <button type="button" class="lang-pill ${l.code==='fr'?'selected':''}" data-lang="${l.code}" aria-pressed="${l.code==='fr'}">
+                <span class="lang-flag">${l.flag}</span><span>${l.label}</span>
+                <span class="lang-check">${I.check}</span>
+              </button>`).join("")}
+          </div>
         </div>
 
         <div class="card">
@@ -174,10 +178,16 @@
   // ---------- Stepper variations ----------
   const varVal = document.getElementById("varVal");
   document.getElementById("varMinus").addEventListener("click", () => { state.variations = Math.max(1, state.variations - 1); render(); });
-  document.getElementById("varPlus").addEventListener("click", () => { state.variations = Math.min(10, state.variations + 1); render(); });
+  document.getElementById("varPlus").addEventListener("click", () => { state.variations = Math.min(4, state.variations + 1); render(); });
 
   // ---------- Langue ----------
-  document.getElementById("langSel").addEventListener("change", e => { state.lang = e.target.value; });
+  document.getElementById("langPills").addEventListener("click", e => {
+    const b = e.target.closest(".lang-pill"); if (!b) return;
+    state.lang = b.dataset.lang;
+    document.querySelectorAll("#langPills .lang-pill").forEach(x => {
+      const on = x === b; x.classList.toggle("selected", on); x.setAttribute("aria-pressed", on);
+    });
+  });
 
   // ---------- Génération ----------
   document.getElementById("btnGenerate").addEventListener("click", onGenerate);
@@ -260,6 +270,8 @@
     document.getElementById("rSlides").textContent = n;
     document.getElementById("rVar").textContent = state.variations;
     varVal.textContent = state.variations;
+    document.getElementById("varMinus").disabled = state.variations <= 1;
+    document.getElementById("varPlus").disabled = state.variations >= 4;
     document.getElementById("rImages").textContent = images;
     document.getElementById("rCredits").textContent = (images * CFG.pricing.creditsPerImage).toLocaleString("fr-FR");
     document.getElementById("btnGenerate").disabled = n === 0;

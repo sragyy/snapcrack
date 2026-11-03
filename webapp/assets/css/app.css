@@ -458,3 +458,33 @@
 .faq-item[open] summary::after { content:"−"; }
 .faq-item[open] summary { border-bottom:1px solid var(--border); color:var(--cyan-bright); }
 .faq-item p { padding:14px 16px; color:var(--text-muted); font-size:14px; line-height:1.6; }
+
+/* Pills de langue (CarouSlide) — style du produit réel */
+.lang-pills { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.lang-pill {
+  display:flex; align-items:center; gap:9px; text-align:left; min-width:0;
+  background:var(--bg-750); color:var(--text-muted);
+  border:1px solid var(--border); border-radius:13px; padding:12px;
+  font-weight:600; font-size:13px; transition:background var(--t-fast),border-color var(--t-fast),color var(--t-fast);
+}
+.lang-pill:hover { border-color:var(--border-strong); color:var(--text); }
+.lang-pill.selected { background:var(--cyan-soft); border-color:var(--border-cyan); color:#fff; box-shadow:inset 0 0 0 1px rgba(69,229,255,.3); }
+.lang-flag { font-size:19px; line-height:1; }
+.lang-check { margin-left:auto; color:var(--cyan-bright); display:none; }
+.lang-check svg { width:15px; height:15px; }
+.lang-pill.selected .lang-check { display:block; }
+.lang-pill:last-child:nth-child(odd) { grid-column:1/-1; }
+/* stepper disabled */
+.stepper button:disabled { opacity:.3; cursor:not-allowed; }
+
+/* Albums locaux : mosaïque de couverture + sélection */
+.album-card { padding:12px; }
+.album-card.picked { border-color:var(--border-cyan); box-shadow:var(--glow-cyan); }
+.album-cover-mosaic { position:relative; display:grid; grid-template-columns:repeat(2,1fr); gap:3px; aspect-ratio:1/1; overflow:hidden; border-radius:12px; background:var(--bg-750); cursor:pointer; }
+.album-cover-mosaic img { width:100%; height:100%; object-fit:cover; }
+.album-check { position:absolute; right:8px; top:8px; width:28px; height:28px; border-radius:50%; background:rgba(5,6,15,.78); border:1px solid var(--border-strong); display:flex; align-items:center; justify-content:center; }
+.album-check.on { background:var(--grad-cyan); border:none; }
+.album-check svg { width:16px; height:16px; color:#04121a; }
+.album-card .album-body { padding:12px 4px 4px; }
+.import-label { cursor:pointer; }
+@media (max-width:560px){ #albumGrid.grid-4{ grid-template-columns:repeat(2,1fr);} }
