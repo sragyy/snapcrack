@@ -33,10 +33,10 @@
     </div>
     <div class="toolbar">
       <div class="seg" id="filterSeg">
-        <button data-f="all" class="active">Toutes</button>
-        <button data-f="running">En cours</button>
-        <button data-f="done">Terminées</button>
-        <button data-f="error">Erreurs</button>
+        <button data-f="all" class="active">Toutes <span class="tab-count" data-count="all">0</span></button>
+        <button data-f="running">En cours <span class="tab-count" data-count="running">0</span></button>
+        <button data-f="done">Terminées <span class="tab-count" data-count="done">0</span></button>
+        <button data-f="error">Erreurs <span class="tab-count" data-count="error">0</span></button>
       </div>
       <button class="btn btn-ghost btn-sm" id="btnClear" style="margin-left:auto">${I.trash} Vider la liste</button>
     </div>
@@ -66,6 +66,10 @@
   }
 
   function render() {
+    const all = window.CAROUBOT_STORE.getCreations();
+    const counts = { all: all.length, running: all.filter(j => j.status === "running" || j.status === "pending_backend").length,
+                     done: all.filter(j => j.status === "done").length, error: all.filter(j => j.status === "error").length };
+    document.querySelectorAll("[data-count]").forEach(c => c.textContent = counts[c.dataset.count]);
     const list = document.getElementById("creationsList");
     const jobs = window.CAROUBOT_STORE.getCreations().filter(match);
     if (!jobs.length) {

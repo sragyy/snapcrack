@@ -82,7 +82,7 @@
   });
 
   function render() {
-    grid.className = albums.length ? "grid grid-4" : "";
+    grid.className = albums.length ? "grid grid-4" : "albums-empty";
     grid.innerHTML = albums.length ? albums.map((a, i) => `
       <div class="card album-card ${selected.has(a.id) ? "picked" : ""}">
         <div class="album-cover-mosaic" data-select="${a.id}">
@@ -100,9 +100,16 @@
           </div>
         </div>
       </div>`).join("") : `
-      <div class="empty">${I.image}
-        <h4>Aucun album pour l'instant</h4>
-        <p class="section-sub">Clique sur « Créer un album » et choisis plusieurs images. Tu pourras les sélectionner et les télécharger en lot (ZIP), sans connexion.</p>
+      <div class="grid grid-4">
+        <label for="albumUpload" class="card folder-new">
+          <span class="folder-ico">${I.folder}<i>${I.plus}</i></span>
+          <strong>Nouvel album</strong>
+          <small>Choisis plusieurs images</small>
+        </label>
+        <div class="folder-hint">
+          <strong>Organise tes images en albums</strong>
+          <p>Chaque import crée un album. Sélectionne-les puis télécharge-les en lot (ZIP), sans connexion.</p>
+        </div>
       </div>`;
 
     const imgs = [...selected].reduce((n, id) => n + (albums.find(a => a.id === id)?.files.length || 0), 0);

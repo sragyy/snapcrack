@@ -412,3 +412,64 @@ body::after {
   .stat-card .stat-val[style] { font-size:15px !important; }
   .rk-thumb { height:130px; }
 }
+
+/* ==========================================================================
+   Finitions "pro"
+   ========================================================================== */
+/* Avertissements : info discrète au lieu d'encadrés jaunes */
+.notice {
+  background: rgba(63,216,255,.06); border: 1px solid rgba(63,216,255,.22);
+  color: #b4c2ea; border-radius: 12px; font-size: 12.5px; line-height: 1.5; padding: 10px 14px;
+}
+.notice svg { color: var(--neon-c); }
+.notice code { color: #7ff0ff; background: rgba(63,216,255,.1); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+/* Badges à côté des titres de page : retirés (titre + sous-titre comme la maquette) */
+.page-title .badge { display: none; }
+.page-subtitle { color: #c3cbef; }
+
+/* États vides */
+.empty h4 { font-family: var(--font-display); font-size: 17px; color: #fff; margin: 4px 0 6px; }
+.empty .btn svg { width: 18px !important; height: 18px !important; margin: 0 !important; opacity: 1 !important; filter: none !important; color: inherit !important; }
+
+/* Onglets avec compteurs */
+.tab-count { display: inline-block; min-width: 22px; padding: 1px 7px; margin-left: 4px; border-radius: 999px; font-size: 11.5px; font-weight: 800; background: rgba(255,255,255,.1); }
+.seg button.active .tab-count { background: rgba(255,255,255,.22); }
+
+/* Bouton générer : plus massif */
+#btnGenerate { padding: 16px 20px; font-size: 15px; font-family: var(--font-display); }
+#btnGenerate:disabled { opacity: .45; }
+
+/* Albums : tuile "Nouvel album" */
+.folder-new { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; min-height: 190px;
+  border-style: dashed !important; background: linear-gradient(160deg, rgba(58,26,134,.45), rgba(10,12,40,.8)) !important; }
+.folder-new:hover { box-shadow: var(--neon-glow-strong); border-color: #5be6ff !important; }
+.folder-ico { position: relative; width: 74px; height: 74px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px;
+  background: linear-gradient(135deg,#7c3aed,#d946ef); border: 2px solid #f0c8ff; box-shadow: 0 0 24px rgba(224,64,251,.75); }
+.folder-ico svg { width: 36px; height: 36px; color: #fff; }
+.folder-ico i { position: absolute; right: -8px; bottom: -8px; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#22d3ee,#2f7bff); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(63,216,255,.9); }
+.folder-ico i svg { width: 16px; height: 16px; }
+.folder-new strong { font-family: var(--font-display); font-size: 17px; }
+.folder-new small { color: #c3cbef; font-size: 12.5px; }
+.folder-hint { grid-column: span 3; align-self: center; padding: 10px 20px; }
+.folder-hint strong { font-family: var(--font-display); font-size: 20px; }
+.folder-hint p { color: #c3cbef; margin-top: 6px; max-width: 460px; line-height: 1.55; }
+@media (max-width: 1100px) { .folder-hint { grid-column: span 1; } }
+
+/* Récap CarouSlide plus compact */
+.recap-row { padding: 10px 0; border-bottom-color: rgba(70,190,255,.12); }
+
+/* Compte : avatar rond comme la maquette */
+.profile-head .big-avatar { border-radius: 50%; box-shadow: 0 0 22px rgba(63,216,255,.6); }
+
+/* Bouton flottant compact (libellé au survol) */
+.fab-creations { padding: 0; width: 58px; height: 58px; border-radius: 50%; justify-content: center; gap: 0; overflow: visible; }
+.fab-creations svg { width: 24px; height: 24px; }
+.fab-creations .fab-label { position: absolute; right: 68px; white-space: nowrap; padding: 8px 12px; border-radius: 10px; font-size: 13px;
+  background: rgba(8,10,34,.95); border: var(--neon-border); box-shadow: var(--neon-glow); opacity: 0; transform: translateX(6px); pointer-events: none; transition: opacity var(--t), transform var(--t); }
+.fab-creations:hover .fab-label { opacity: 1; transform: none; }
+.fab-creations .fab-count { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg,#22d3ee,#2f7bff); color: #fff; box-shadow: 0 0 10px rgba(63,216,255,.9); }
+@media (max-width: 960px) { .fab-creations { width: 52px; height: 52px; } .fab-creations .fab-label { display: none; } }
+/* Icône du champ lien TikTok visible */
+#tiktokUrl + span, #tiktokUrl ~ span { color: var(--neon-c); }

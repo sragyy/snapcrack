@@ -74,7 +74,7 @@
             <label class="field-label" style="width:100%;margin:0">Ou coller un lien TikTok</label>
             <div style="flex:1;display:flex;gap:10px;min-width:220px">
               <div style="flex:1;position:relative;display:flex;align-items:center">
-                <span style="position:absolute;left:14px;color:var(--text-dim);display:flex">${I.link}</span>
+                <span style="position:absolute;left:14px;color:var(--cyan-bright);display:flex;width:18px;height:18px">${I.link}</span>
                 <input class="field" id="tiktokUrl" style="padding-left:42px" placeholder="https://www.tiktok.com/@.../photo/..."/>
               </div>
               <button class="btn btn-cyan" id="btnImportLink">Importer</button>
@@ -127,7 +127,7 @@
             <div class="recap-row recap-total"><span class="k">Crédits nécessaires</span><span class="v mono" id="rCredits">0</span></div>
           </div>
           <div class="section-sub" style="margin-top:6px">${CFG.pricing.creditsPerImage} crédits CAROUBOT par image générée.</div>
-          <button class="btn btn-primary btn-block" id="btnGenerate" style="margin-top:18px" disabled>${I.sparkles} Confirmer la génération</button>
+          <button class="btn btn-primary btn-block" id="btnGenerate" style="margin-top:18px" disabled>${I.bolt} Générer le carrousel</button>
           ${CFG.backendConnected ? "" : `<div class="notice" style="margin-top:12px">${I.alert} Backend non connecté : aucune image ne sera réellement générée et aucun crédit ne sera débité.</div>`}
         </div>
       </div>
@@ -275,7 +275,9 @@
     document.getElementById("varPlus").disabled = state.variations >= 4;
     document.getElementById("rImages").textContent = images;
     document.getElementById("rCredits").textContent = (images * CFG.pricing.creditsPerImage).toLocaleString("fr-FR");
-    document.getElementById("btnGenerate").disabled = n === 0;
+    const gen = document.getElementById("btnGenerate");
+    gen.disabled = n === 0;
+    gen.innerHTML = n ? `${I.bolt} Générer le carrousel (${(images * CFG.pricing.creditsPerImage).toLocaleString("fr-FR")} crédits)` : `${I.bolt} Générer le carrousel`;
 
     if (!n) {
       slidesWrap.innerHTML = `<div class="empty">${I.image}<h4>Aucune slide importée</h4><p class="section-sub">Importez des images ou collez un lien TikTok ci-dessus.</p></div>`;
