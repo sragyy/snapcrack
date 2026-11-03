@@ -161,3 +161,13 @@
 /* Visibilité immédiate à l'ouverture (permet le focus clavier), masquée après le fondu à la fermeture */
 .cmdk, .cmdk-scrim, .notif-pop { transition-property: opacity, transform, visibility; transition-duration: .2s, .25s, 0s; transition-delay: 0s, 0s, .25s; }
 .cmdk.open, .cmdk-scrim.open, .notif-pop.open { transition-delay: 0s, 0s, 0s; }
+
+/* Mobile : on réserve la place de la bulle au-dessus de la mascotte */
+@media (max-width: 960px) {
+  .wh-stage { height: 262px; align-items: flex-end; padding-bottom: 18px; }
+  .bubble { top: 6px; transform: translate(-50%, 0) scale(.6); font-size: 13px; padding: 9px 13px; max-width: min(260px, 80vw); }
+  .bubble.show { transform: translate(-50%, 0) scale(1); }
+  .bubble::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; margin-left: -6px; transform: rotate(45deg);
+    background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(139,92,246,.95)); border-right: 1px solid rgba(255,255,255,.35); border-bottom: 1px solid rgba(255,255,255,.35); }
+  .wh-float.f1 { top: 44%; } .wh-float.f2 { top: 36%; }
+}
