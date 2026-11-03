@@ -127,3 +127,33 @@ inventée tant que le backend n'est pas connecté.
 > VPS de production (`/home/ubuntu/caroubot_webapp_preview`). Il **n'a pas été
 > exécuté** depuis cette session : le déploiement reste une action manuelle et
 > volontaire de ta part. Le bot Telegram et l'Admin Panel ne sont pas touchés.
+
+## Génération massive (CarouSlide) et top 5 / top 10 (CarouRadar)
+
+**CarouSlide · génération massive**
+- Mode « Génération massive » : jusqu'à **50 liens TikTok** collés d'un coup
+  (`CAROUBOT_CONFIG.carouslide.maxMassLinks`). Doublons et éléments qui ne sont
+  pas des liens TikTok sont ignorés et signalés ; les liens sont réordonnables
+  et générés **dans l'ordre de la liste**.
+- Le coût exact dépend du nombre de slides de chaque lien : il doit être
+  calculé par le serveur après extraction, **avant tout débit**
+  (7 crédits par image). L'interface affiche un exemple d'estimation.
+- Requête prévue : `POST /api/carouslide/jobs` avec
+  `{ mode: "mass", links: [...], variations, lang }`.
+- Les carrousels sélectionnés dans CarouRadar arrivent directement dans cette
+  liste (« Envoyer vers CarouSlide »).
+
+**CarouRadar · top 5 puis top 10**
+- Une recherche coûte **1 crédit** et affiche le **top 5**
+  (`radar.creditsTop5`).
+- Le bouton « Afficher le top 10 » coûte **1 crédit de plus**
+  (`radar.creditsTop10`) et ajoute les positions 6 à 10.
+- Changer de pays, de période ou de classement demande une nouvelle recherche.
+- Requête prévue : `POST /api/radar/search` avec
+  `{ country, period, sort, limit: 5 | 10 }`. Le débit doit être fait côté
+  serveur ; chaque élément renvoyé peut contenir `id, title, author, url, cover,
+  views, sales, revenue`.
+
+Chaque action payante passe par une fenêtre de confirmation qui affiche le
+coût. Tant que le backend n'est pas relié, rien n'est lancé ni débité, et aucun
+résultat n'est inventé.

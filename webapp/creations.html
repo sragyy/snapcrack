@@ -87,7 +87,7 @@
           <div style="display:flex;align-items:center;gap:12px">
             <span class="creation-thumb">${I.slide}</span>
             <div><div style="font-weight:700">${j.title}</div>
-            <div class="section-sub">${j.images} images · ${j.slides} slides · ${j.lang.toUpperCase()} · ${j.credits} crédits</div></div>
+            <div class="section-sub">${window.CAROUBOT_STORE.describe(j)}</div></div>
           </div>
           ${statusBadge(j.status)}
         </div>

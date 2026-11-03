@@ -182,13 +182,15 @@
         ? `<span class="badge badge-success"><span class="dot"></span>Terminé</span>`
         : j.status === "error"
         ? `<span class="badge badge-danger"><span class="dot"></span>Erreur</span>`
+        : j.status === "pending_backend"
+        ? `<span class="badge badge-warning"><span class="dot"></span>En attente</span>`
         : `<span class="badge badge-cyan"><span class="dot"></span>En cours ${j.progress}%</span>`;
       return `
         <div class="creation-row">
           <div class="creation-thumb">${I.slide}</div>
           <div class="creation-main">
             <div class="t">${j.title}</div>
-            <div class="s">${j.images} images · ${j.lang.toUpperCase()} · ${j.credits} crédits</div>
+            <div class="s">${window.CAROUBOT_STORE.describe(j)}</div>
             ${j.status==="running" ? `<div class="progress" style="margin-top:8px"><span style="width:${j.progress}%"></span></div>` : ""}
           </div>
           ${statusBadge}

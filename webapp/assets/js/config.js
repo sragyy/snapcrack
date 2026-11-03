@@ -38,7 +38,14 @@ window.CAROUBOT_CONFIG = {
     { code: "it", label: "Italiano", flag: "🇮🇹" },
   ],
 
+  carouslide: {
+    maxVariations: 4,
+    maxMassLinks: 50,       // génération massive : 50 liens TikTok maximum
+  },
+
   radar: {
+    creditsTop5: 1,         // une recherche = 1 crédit, affiche le top 5
+    creditsTop10: 1,        // afficher le top 10 = 1 crédit de plus
     countries: [{ code: "FR", label: "France", flag: "🇫🇷" }],
     periods: [
       { code: "24h", label: "24 heures" },

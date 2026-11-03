@@ -28,16 +28,23 @@
   const el = window.CAROUBOT_SHELL.pageEl;
 
   // ----- état -----
+  const MAX_LINKS = CFG.carouslide.maxMassLinks;      // 50
+  const MAX_VAR = CFG.carouslide.maxVariations;        // 4
   const state = {
+    mode: "single",        // "single" = slides / un lien · "mass" = génération massive
     slides: [],            // { id, src, name }
+    links: [],             // { id, url } — génération massive, dans l'ordre
     variations: 1,         // variations par slide
     lang: "fr",
   };
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  // Transfert éventuel depuis CarouRadar
+  // Transfert éventuel depuis CarouRadar : les liens partent en génération massive
   const transfer = window.CAROUBOT_STORE.takeTransfer();
   if (transfer.length) {
-    transfer.forEach(t => state.slides.push({ id: uid(), src: null, name: t.title || "Carrousel importé (Radar)", fromRadar: true }));
+    const withUrl = transfer.filter(t => t.url);
+    if (withUrl.length) { state.mode = "mass"; withUrl.slice(0, MAX_LINKS).forEach(t => state.links.push({ id: uid(), url: t.url })); }
+    transfer.filter(t => !t.url).forEach(t => state.slides.push({ id: uid(), src: null, name: t.title || "Carrousel importé (Radar)", fromRadar: true }));
   }
 
   function uid() { return "s_" + Math.random().toString(36).slice(2, 9); }
@@ -65,7 +72,24 @@
         <div class="card">
           <div class="section-head" style="margin-bottom:14px">
             <h2 class="section-title">${I.upload} Importer</h2>
+            <div class="seg mode-seg" id="modeSeg" role="tablist">
+              <button data-mode="single" role="tab">${I.image} Slides</button>
+              <button data-mode="mass" role="tab">${I.layers} Génération massive <span class="tab-count">${MAX_LINKS} max</span></button>
+            </div>
           </div>
+
+          <div id="massImport" hidden>
+            <p class="section-sub" style="margin-bottom:12px">Colle jusqu'à <b>${MAX_LINKS} liens TikTok</b> (un par ligne, ou séparés par des espaces). Ils seront générés dans l'ordre de la liste.</p>
+            <textarea class="field mass-input" id="massInput" rows="6" spellcheck="false" placeholder="https://www.tiktok.com/@compte/photo/7412345678901234567&#10;https://vm.tiktok.com/ZMabc123/"></textarea>
+            <div class="mass-tools">
+              <button class="btn btn-cyan" id="btnAddLinks">${I.plus} Ajouter les liens</button>
+              <span class="section-sub" id="massHint">Astuce : Ctrl + Entrée pour ajouter</span>
+            </div>
+            <div class="mass-report" id="massReport"></div>
+            ${CFG.backendConnected ? "" : `<div class="notice" style="margin-top:14px">${I.alert} Extraction TikTok non connectée : les liens sont préparés ici, leurs slides seront récupérées une fois le service relié.</div>`}
+          </div>
+
+          <div id="singleImport">
           <div class="dropzone" id="dropzone">
             ${I.upload}
             <h4>Glissez vos images ici</h4>
@@ -83,10 +107,21 @@
             </div>
           </div>
           ${CFG.backendConnected ? "" : `<div class="notice" style="margin-top:14px">${I.alert} Extraction TikTok non connectée — un emplacement de slide est ajouté, l'import réel se fera une fois le backend relié.</div>`}
+          </div>
+        </div>
+
+        <!-- Liens (génération massive) -->
+        <div class="card" id="linksCard" hidden>
+          <div class="section-head" style="margin-bottom:14px">
+            <h2 class="section-title">${I.link} Liens à générer <span class="badge" id="linkCount">0 / ${MAX_LINKS}</span></h2>
+            <button class="btn btn-ghost btn-sm" id="btnClearLinks">${I.trash} Tout vider</button>
+          </div>
+          <div class="mass-meter"><span id="massMeter"></span></div>
+          <div id="linksWrap"></div>
         </div>
 
         <!-- Slides -->
-        <div class="card">
+        <div class="card" id="slidesCard">
           <div class="section-head" style="margin-bottom:14px">
             <h2 class="section-title">${I.layers} Mes slides <span class="badge" id="slideCount">0</span></h2>
             <button class="btn btn-ghost btn-sm" id="btnClear">${I.trash} Tout vider</button>
@@ -122,13 +157,8 @@
 
         <div class="card">
           <h2 class="section-title" style="margin-bottom:16px">${I.sparkles} Récapitulatif</h2>
-          <div class="recap">
-            <div class="recap-row"><span class="k">Slides</span><span class="v mono" id="rSlides">0</span></div>
-            <div class="recap-row"><span class="k">Variations / slide</span><span class="v mono" id="rVar">1</span></div>
-            <div class="recap-row"><span class="k">Images générées</span><span class="v mono" id="rImages">0</span></div>
-            <div class="recap-row recap-total"><span class="k">Crédits nécessaires</span><span class="v mono" id="rCredits">0</span></div>
-          </div>
-          <div class="section-sub" style="margin-top:6px">${CFG.pricing.creditsPerImage} crédits CAROUBOT par image générée.</div>
+          <div class="recap" id="recap"></div>
+          <div class="section-sub" style="margin-top:6px" id="recapNote">${CFG.pricing.creditsPerImage} crédits CAROUBOT par image générée.</div>
           <button class="btn btn-primary btn-block" id="btnGenerate" style="margin-top:18px" disabled>${I.bolt} Générer le carrousel</button>
           ${CFG.backendConnected ? "" : `<div class="notice" style="margin-top:12px">${I.alert} Backend non connecté : aucune image ne sera réellement générée et aucun crédit ne sera débité.</div>`}
         </div>
@@ -181,7 +211,7 @@
   // ---------- Stepper variations ----------
   const varVal = document.getElementById("varVal");
   document.getElementById("varMinus").addEventListener("click", () => { state.variations = Math.max(1, state.variations - 1); render(); });
-  document.getElementById("varPlus").addEventListener("click", () => { state.variations = Math.min(4, state.variations + 1); render(); });
+  document.getElementById("varPlus").addEventListener("click", () => { state.variations = Math.min(MAX_VAR, state.variations + 1); render(); });
 
   // ---------- Langue ----------
   document.getElementById("langPills").addEventListener("click", e => {
@@ -192,62 +222,122 @@
     });
   });
 
-  // ---------- Génération ----------
-  document.getElementById("btnGenerate").addEventListener("click", onGenerate);
+  // ---------- Mode : slides / génération massive ----------
+  const modeSeg = document.getElementById("modeSeg");
+  modeSeg.addEventListener("click", e => {
+    const b = e.target.closest("[data-mode]"); if (!b || b.dataset.mode === state.mode) return;
+    state.mode = b.dataset.mode; render();
+  });
 
-  function onGenerate() {
-    if (!state.slides.length) return;
-    const images = state.slides.length * state.variations;
-    const credits = images * CFG.pricing.creditsPerImage;
-    const job = window.CAROUBOT_STORE.addPendingJob({
-      title: `Carrousel — ${state.slides.length} slides`,
-      slides: state.slides.length, images, lang: state.lang, credits,
-    });
+  // ---------- Génération massive : lecture des liens collés ----------
+  const LINK_RE = /(?:https?:\/\/)?(?:[a-z0-9-]+\.)*tiktok\.com\/[^\s,;"'<>]+/gi;
+  const clean = u => {
+    let x = u.replace(/[)\].,!?]+$/, "");
+    if (!/^https?:\/\//i.test(x)) x = "https://" + x;
+    try { const o = new URL(x); return o.origin.toLowerCase() + o.pathname.replace(/\/+$/, ""); } catch { return null; }
+  };
+  function addLinks(text) {
+    const found = text.match(LINK_RE) || [];
+    const tokens = text.split(/\s+/).filter(Boolean);
+    const ignored = tokens.filter(t => !/tiktok\.com\//i.test(t)).length;
+    const known = new Set(state.links.map(l => l.url));
+    let added = 0, dup = 0, over = 0;
+    for (const raw of found) {
+      const url = clean(raw); if (!url) continue;
+      if (known.has(url)) { dup++; continue; }
+      if (state.links.length >= MAX_LINKS) { over++; continue; }
+      state.links.push({ id: uid(), url }); known.add(url); added++;
+    }
+    const parts = [];
+    if (added) parts.push(`<span class="ok">${I.check} ${added} lien(s) ajouté(s)</span>`);
+    if (dup) parts.push(`<span>${dup} doublon(s) ignoré(s)</span>`);
+    if (ignored) parts.push(`<span class="warn">${ignored} élément(s) ignoré(s) : pas un lien TikTok</span>`);
+    if (over) parts.push(`<span class="warn">${over} lien(s) non ajouté(s) : limite de ${MAX_LINKS} atteinte</span>`);
+    if (!found.length && !ignored) parts.push(`<span class="warn">Colle au moins un lien TikTok.</span>`);
+    document.getElementById("massReport").innerHTML = parts.join("");
+    if (added) document.getElementById("massInput").value = "";
+    render();
+  }
+  document.getElementById("btnAddLinks").addEventListener("click", () => addLinks(document.getElementById("massInput").value));
+  document.getElementById("massInput").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); addLinks(e.target.value); } });
+  document.getElementById("btnClearLinks").addEventListener("click", () => { state.links = []; document.getElementById("massReport").innerHTML = ""; render(); });
+  document.getElementById("linksWrap").addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const i = state.links.findIndex(l => l.id === b.dataset.id); if (i < 0) return;
+    if (b.dataset.act === "del") state.links.splice(i, 1);
+    else { const j = i + (b.dataset.act === "up" ? -1 : 1); if (j < 0 || j >= state.links.length) return; [state.links[i], state.links[j]] = [state.links[j], state.links[i]]; }
+    render();
+  });
+
+  // ---------- Génération (avec confirmation du coût) ----------
+  document.getElementById("btnGenerate").addEventListener("click", onGenerate);
+  const langLabel = () => (CFG.languages.find(l => l.code === state.lang) || {}).label;
+
+  async function onGenerate() {
+    const offlineNote = CFG.backendConnected ? "" : "Service non connecté : aucune image ne sera générée et aucun crédit ne sera débité.";
+    let job, body;
+    if (state.mode === "mass") {
+      const n = state.links.length; if (!n) return;
+      const ex = n * 3 * state.variations * CFG.pricing.creditsPerImage;
+      const ok = await confirmCost({
+        title: `Génération massive · ${n} lien${n > 1 ? "s" : ""}`,
+        lines: [`${state.variations} variante(s) par slide · textes en ${langLabel()}`,
+                `Le coût exact dépend du nombre de slides de chaque lien : il sera calculé après extraction, avant tout débit. Exemple : 3 slides par lien ≈ ${ex.toLocaleString("fr-FR")} crédits.`],
+        cost: CFG.pricing.creditsPerImage, unit: "crédits / image",
+        confirmLabel: "Lancer la génération massive", note: offlineNote,
+      });
+      if (!ok) return;
+      job = window.CAROUBOT_STORE.addPendingJob({ title: `Génération massive — ${n} liens`, links: n, slides: null, images: null, credits: null, lang: state.lang });
+      body = { mode: "mass", links: state.links.map(l => l.url), variations: state.variations, lang: state.lang };
+    } else {
+      if (!state.slides.length) return;
+      const images = state.slides.length * state.variations, credits = images * CFG.pricing.creditsPerImage;
+      const ok = await confirmCost({
+        title: "Générer le carrousel",
+        lines: [`${state.slides.length} slide(s) × ${state.variations} variante(s) = ${images} image(s)`, `Textes en ${langLabel()} · ordre des slides conservé`],
+        cost: credits, confirmLabel: "Lancer la génération", note: offlineNote,
+      });
+      if (!ok) return;
+      job = window.CAROUBOT_STORE.addPendingJob({ title: `Carrousel — ${state.slides.length} slides`, slides: state.slides.length, images, lang: state.lang, credits });
+      body = { mode: "single", variations: state.variations, lang: state.lang, slides: state.slides.map(s => ({ name: s.name })) };
+    }
 
     const zone = document.getElementById("progressZone");
     if (!CFG.backendConnected) {
       zone.innerHTML = `
         <div class="card">
-          <div class="section-head"><h2 class="section-title">${I.clock} Génération enregistrée</h2>${statusBadge("pending_backend")}</div>
-          <div class="notice">${I.alert} Le backend n'est pas connecté. La demande (<b>${images} images</b>, ${credits} crédits) est enregistrée dans « Mes créations » avec le statut « en attente ». <b>Aucune image n'a été générée et aucun crédit n'a été débité.</b></div>
-          <div style="display:flex;gap:10px;margin-top:14px">
+          <div class="section-head"><h2 class="section-title">${I.clock} Demande enregistrée</h2>${statusBadge("pending_backend")}</div>
+          <div class="notice">${I.alert} « ${esc(job.title)} » est enregistrée dans Mes créations avec le statut « en attente ». <b>Aucune image n'a été générée et aucun crédit n'a été débité</b> : le service de génération n'est pas encore relié.</div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
             <a class="btn btn-ghost btn-sm" href="creations.html">${I.layers} Voir mes créations</a>
             <button class="btn btn-ghost btn-sm" onclick="window.CAROUBOT_SHELL.openDrawer()">Ouvrir le panneau</button>
           </div>
         </div>`;
-      toast("Demande enregistrée (backend non connecté)", "violet");
+      zone.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      toast("Demande enregistrée (service non connecté)", "violet");
       return;
     }
-
-    // --- Backend connecté : suivi réel de la progression ---
     zone.innerHTML = `
       <div class="card">
         <div class="section-head"><h2 class="section-title">${I.clock} Génération en cours</h2><span id="pStatus">${statusBadge("running")}</span></div>
         <div class="progress"><span id="pBar" style="width:0%"></span></div>
         <div class="section-sub" id="pText" style="margin-top:10px">Initialisation…</div>
       </div>`;
-    pollJob(job.id, images, credits);
+    pollJob(job.id, body);
   }
 
-  async function pollJob(jobId, images, credits) {
-    // Appel réel : POST createJob puis GET jobStatus/:id en boucle.
+  async function pollJob(jobId, body) {
+    // Appel réel : POST createJob puis GET jobStatus/:id en boucle. Le serveur calcule et débite les crédits.
     try {
-      const res = await fetch(CFG.api.createJob, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variations: state.variations, lang: state.lang,
-          slides: state.slides.map(s => ({ name: s.name })) }),
-      });
+      const res = await fetch(CFG.api.createJob, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const { id } = await res.json();
       const timer = setInterval(async () => {
         const st = await fetch(CFG.api.jobStatus + id).then(r => r.json());
         document.getElementById("pBar").style.width = st.progress + "%";
         document.getElementById("pText").textContent = st.message || (st.progress + "%");
-        window.CAROUBOT_STORE.updateJob(jobId, { progress: st.progress, status: st.status });
-        if (st.status === "done" || st.status === "error") {
-          clearInterval(timer);
-          document.getElementById("pStatus").innerHTML = statusBadge(st.status);
-        }
+        window.CAROUBOT_STORE.updateJob(jobId, { progress: st.progress, status: st.status, credits: st.credits ?? null, images: st.images ?? null });
+        if (st.status === "done" || st.status === "error") { clearInterval(timer); document.getElementById("pStatus").innerHTML = statusBadge(st.status); }
       }, 1500);
     } catch (e) {
       window.CAROUBOT_STORE.updateJob(jobId, { status: "error", error: String(e) });
@@ -259,30 +349,49 @@
   function statusBadge(s) {
     if (s === "done")  return `<span class="badge badge-success"><span class="dot"></span>Terminé</span>`;
     if (s === "error") return `<span class="badge badge-danger"><span class="dot"></span>Erreur</span>`;
-    if (s === "pending_backend") return `<span class="badge badge-warning"><span class="dot"></span>En attente backend</span>`;
+    if (s === "pending_backend") return `<span class="badge badge-warning"><span class="dot"></span>En attente</span>`;
     return `<span class="badge badge-cyan"><span class="dot"></span>En cours</span>`;
   }
 
-  // ---------- Rendu slides + drag reorder ----------
+  // ---------- Rendu ----------
   let dragId = null;
+  const row = (k, v, cls = "") => `<div class="recap-row ${cls}"><span class="k">${k}</span><span class="v mono">${v}</span></div>`;
   function render() {
-    // récap
-    const n = state.slides.length;
-    const images = n * state.variations;
-    document.getElementById("slideCount").textContent = n;
-    document.getElementById("rSlides").textContent = n;
-    document.getElementById("rVar").textContent = state.variations;
+    const mass = state.mode === "mass";
+    modeSeg.querySelectorAll("[data-mode]").forEach(b => { const on = b.dataset.mode === state.mode; b.classList.toggle("active", on); b.setAttribute("aria-selected", on); });
+    document.getElementById("massImport").hidden = !mass;
+    document.getElementById("singleImport").hidden = mass;
+    document.getElementById("linksCard").hidden = !mass;
+    document.getElementById("slidesCard").hidden = mass;
+
     varVal.textContent = state.variations;
     document.getElementById("varMinus").disabled = state.variations <= 1;
-    document.getElementById("varPlus").disabled = state.variations >= 4;
-    document.getElementById("rImages").textContent = images;
-    document.getElementById("rCredits").textContent = (images * CFG.pricing.creditsPerImage).toLocaleString("fr-FR");
+    document.getElementById("varPlus").disabled = state.variations >= MAX_VAR;
     const gen = document.getElementById("btnGenerate");
+    const recap = document.getElementById("recap"), note = document.getElementById("recapNote");
+
+    if (mass) {
+      const n = state.links.length;
+      recap.innerHTML = row("Liens TikTok", `${n} / ${MAX_LINKS}`) + row("Variations / slide", state.variations) +
+        row("Slides par lien", "après extraction") + row("Crédits nécessaires", n ? "calculés avant débit" : "0", n ? "recap-total soft" : "recap-total");
+      note.textContent = `${CFG.pricing.creditsPerImage} crédits par image générée · coût exact affiché avant tout débit.`;
+      gen.disabled = !n;
+      gen.innerHTML = `${I.bolt} ${n ? `Lancer la génération massive (${n} lien${n > 1 ? "s" : ""})` : "Lancer la génération massive"}`;
+      renderLinks();
+      return;
+    }
+
+    const n = state.slides.length, images = n * state.variations, credits = images * CFG.pricing.creditsPerImage;
+    recap.innerHTML = row("Slides", n) + row("Variations / slide", state.variations) + row("Images générées", images) +
+      row("Crédits nécessaires", credits.toLocaleString("fr-FR"), "recap-total");
+    note.textContent = `${CFG.pricing.creditsPerImage} crédits CAROUBOT par image générée.`;
+    document.getElementById("slideCount").textContent = n;
     gen.disabled = n === 0;
-    gen.innerHTML = n ? `${I.bolt} Générer le carrousel (${(images * CFG.pricing.creditsPerImage).toLocaleString("fr-FR")} crédits)` : `${I.bolt} Générer le carrousel`;
+    gen.innerHTML = n ? `${I.bolt} Générer le carrousel (${credits.toLocaleString("fr-FR")} crédits)` : `${I.bolt} Générer le carrousel`;
 
     if (!n) {
-      slidesWrap.innerHTML = `<div class="empty">${I.image}<h4>Aucune slide importée</h4><p class="section-sub">Importez des images ou collez un lien TikTok ci-dessus.</p></div>`;
+      slidesWrap.className = "";
+      slidesWrap.innerHTML = `<div class="empty">${I.image}<h4>Aucune slide importée</h4><p class="section-sub">Importe des images ou colle un lien TikTok ci-dessus. Pour plusieurs liens, passe en « Génération massive ».</p></div>`;
       return;
     }
     slidesWrap.className = "slides-grid";
@@ -290,14 +399,13 @@
       <div class="slide-card" draggable="true" data-id="${s.id}">
         <span class="slide-index">${i + 1}</span>
         <div class="slide-actions"><button data-del="${s.id}" aria-label="Supprimer">${I.trash}</button></div>
-        ${s.src ? `<img src="${s.src}" alt="${s.name}"/>` : `<div class="ph">${I.image}<span>${s.name}</span></div>`}
+        ${s.src ? `<img src="${s.src}" alt="${esc(s.name)}"/>` : `<div class="ph">${I.image}<span>${esc(s.name)}</span></div>`}
         <span class="slide-drag" title="Glisser pour réordonner">${I.drag}</span>
         <span class="slide-variations">×${state.variations}</span>
       </div>`).join("");
 
     slidesWrap.querySelectorAll("[data-del]").forEach(b =>
       b.addEventListener("click", () => { state.slides = state.slides.filter(x => x.id !== b.dataset.del); render(); }));
-
     slidesWrap.querySelectorAll(".slide-card").forEach(card => {
       card.addEventListener("dragstart", () => { dragId = card.dataset.id; card.classList.add("dragging"); });
       card.addEventListener("dragend", () => { dragId = null; card.classList.remove("dragging"); slidesWrap.querySelectorAll(".slide-card").forEach(c => c.classList.remove("drag-over")); });
@@ -305,18 +413,37 @@
       card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
       card.addEventListener("drop", e => {
         e.preventDefault();
-        const from = state.slides.findIndex(x => x.id === dragId);
-        const to = state.slides.findIndex(x => x.id === card.dataset.id);
+        const from = state.slides.findIndex(x => x.id === dragId), to = state.slides.findIndex(x => x.id === card.dataset.id);
         if (from < 0 || to < 0 || from === to) return;
-        const [m] = state.slides.splice(from, 1);
-        state.slides.splice(to, 0, m);
-        render();
+        const [m] = state.slides.splice(from, 1); state.slides.splice(to, 0, m); render();
       });
     });
   }
 
+  function renderLinks() {
+    const n = state.links.length, wrap = document.getElementById("linksWrap");
+    document.getElementById("linkCount").textContent = `${n} / ${MAX_LINKS}`;
+    document.getElementById("massMeter").style.width = (n / MAX_LINKS * 100) + "%";
+    if (!n) {
+      wrap.innerHTML = `<div class="empty">${I.link}<h4>Aucun lien pour l'instant</h4><p class="section-sub">Colle tes liens TikTok ci-dessus, ou sélectionne des carrousels dans CarouRadar puis « Envoyer vers CarouSlide ».</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `<ol class="link-list">${state.links.map((l, i) => {
+      const u = l.url.replace(/^https?:\/\//, "");
+      return `<li class="link-row">
+        <span class="lr-no">${i + 1}</span>
+        <span class="lr-ico">${I.link}</span>
+        <a class="lr-url" href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.url)}">${esc(u)}</a>
+        <span class="lr-acts">
+          <button data-act="up" data-id="${l.id}" aria-label="Monter" ${i === 0 ? "disabled" : ""}>${I.chevL}</button>
+          <button data-act="down" data-id="${l.id}" aria-label="Descendre" ${i === n - 1 ? "disabled" : ""}>${I.chevR}</button>
+          <button data-act="del" data-id="${l.id}" aria-label="Retirer" class="del">${I.trash}</button>
+        </span></li>`;
+    }).join("")}</ol>`;
+  }
+
   render();
-  if (transfer.length) toast(transfer.length + " carrousel(s) importé(s) depuis le Radar", "cyan");
+  if (transfer.length) toast(transfer.length + " carrousel(s) reçu(s) depuis CarouRadar", "cyan");
 })();
 </script>
 <script src="assets/js/motion.js"></script>

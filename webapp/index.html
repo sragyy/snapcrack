@@ -122,7 +122,7 @@
       <a class="rc-card" href="creations.html">
         <div class="rc-thumb">${I.slide}</div>
         <strong class="rc-title">${c.title}</strong>
-        <span class="rc-meta">${I.image} ${c.slides} slides</span>
+        <span class="rc-meta">${I.image} ${c.links ? c.links + " liens" : (c.slides ?? 0) + " slides"}</span>
         ${c.status === "pending_backend" ? `<span class="badge badge-warning rc-state">En attente</span>`
           : c.status === "running" ? `<span class="badge badge-cyan rc-state">${c.progress}%</span>`
           : `<span class="badge badge-success rc-state">Terminé</span>`}
