@@ -6,6 +6,30 @@
    ========================================================================== */
 (function () {
   const I = window.ICON;
+
+  /* ---------- Écran d'ouverture (une fois par session) ---------- */
+  (function splash() {
+    let seen = false;
+    try { seen = sessionStorage.getItem("caroubot_splash") === "1"; sessionStorage.setItem("caroubot_splash", "1"); } catch (e) {}
+    if (seen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const sp = document.createElement("div");
+    sp.id = "splash";
+    sp.setAttribute("aria-hidden", "true");
+    sp.innerHTML = `<div class="sp-inner">
+      <img class="sp-robot" src="assets/img/caroubot-mascot.svg" alt="">
+      <div class="sp-logo">CAROU<span>BOT</span></div>
+      <div class="sp-bar"><i></i></div></div>`;
+    document.body.appendChild(sp);
+    // Reste visible au moins 1,1 s, disparaît une fois la page chargée (2,6 s maximum)
+    const t0 = performance.now();
+    let gone = false;
+    const hide = () => {
+      if (gone) return; gone = true;
+      setTimeout(() => { sp.classList.add("hide"); setTimeout(() => sp.remove(), 600); }, Math.max(0, 1100 - (performance.now() - t0)));
+    };
+    if (document.readyState === "complete") hide(); else window.addEventListener("load", hide, { once: true });
+    setTimeout(hide, 2600);
+  })();
   const page = window.CAROUBOT_PAGE || "home";
 
   const NAV = [

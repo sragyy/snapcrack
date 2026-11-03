@@ -1,0 +1,163 @@
+/* ==========================================================================
+   CAROUBOT — Couche "ultra premium"
+   Bordures dégradées, verre, grain, écran d'ouverture, palette ⌘K,
+   notifications, halo d'ambiance, bulle de la mascotte, toasts.
+   ========================================================================== */
+
+/* ---------- Bordures dégradées cyan → violet + reflet de verre ---------- */
+:root {
+  --grad-border: linear-gradient(140deg, rgba(91,230,255,.75) 0%, rgba(47,123,255,.35) 42%, rgba(180,92,255,.65) 100%);
+  --grad-border-hover: linear-gradient(140deg, #7ff0ff 0%, #4f8dff 45%, #d08cff 100%);
+}
+.card:not(.hero-card):not(.folder-new) {
+  border: 1.5px solid transparent;
+  background: var(--panel-bg) padding-box, var(--grad-border) border-box;
+  box-shadow: var(--neon-glow), inset 0 1px 0 rgba(255,255,255,.07);
+}
+.card:not(.hero-card):not(.folder-new):hover {
+  background: var(--panel-bg) padding-box, var(--grad-border-hover) border-box;
+}
+.sidebar, .main {
+  border: 1.5px solid transparent;
+  background: linear-gradient(180deg, rgba(14,18,56,.92), rgba(7,8,26,.95)) padding-box, var(--grad-border) border-box;
+}
+.main { background: linear-gradient(170deg, rgba(10,12,40,.6), rgba(5,6,20,.66)) padding-box, var(--grad-border) border-box; }
+@media (max-width: 960px) { .main { background: transparent; border: none; } }
+
+/* ---------- Grain filmique très léger ---------- */
+.grain {
+  position: fixed; inset: 0; z-index: 9990; pointer-events: none; opacity: .055; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Halo d'ambiance qui suit la souris ---------- */
+.aurora {
+  position: fixed; left: 0; top: 0; width: 720px; height: 720px; margin: -360px 0 0 -360px; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle, rgba(63,216,255,.16) 0%, rgba(139,92,246,.1) 35%, transparent 65%);
+  filter: blur(10px); opacity: 0; transition: opacity .6s;
+}
+.aurora.on { opacity: 1; }
+
+/* ---------- Surlignage qui glisse dans la sidebar ---------- */
+.sidebar-nav { position: relative; }
+.nav-ind {
+  position: absolute; left: 14px; right: 14px; top: 0; height: 0; border-radius: 15px; pointer-events: none; z-index: 0; opacity: 0;
+  background: rgba(63,216,255,.08); border: 1px solid rgba(63,216,255,.28); box-shadow: 0 0 18px rgba(63,216,255,.18);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), height .35s cubic-bezier(.2,.8,.2,1), opacity .25s;
+}
+.sidebar-nav .nav-item { position: relative; z-index: 1; }
+.sidebar-nav.has-ind .nav-item:hover:not(.active) { background: transparent; border-color: transparent; }
+
+/* ---------- Écran d'ouverture ---------- */
+#splash {
+  position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(600px 400px at 50% 45%, rgba(47,123,255,.28), transparent 70%), radial-gradient(500px 360px at 30% 70%, rgba(139,92,246,.22), transparent 70%), #03030d;
+  transition: opacity .5s ease, visibility .5s;
+}
+#splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.sp-inner { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.sp-robot { width: 130px; height: 140px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(63,216,255,.7)); animation: spPop .7s cubic-bezier(.2,1.4,.4,1) both; }
+.sp-logo { font-family: "Poppins", sans-serif; font-weight: 900; font-size: 38px; letter-spacing: .02em; color: #fff; animation: spLogo .8s cubic-bezier(.2,.8,.2,1) both .15s; }
+.sp-logo span { color: #3fd8ff; text-shadow: 0 0 22px rgba(63,216,255,.9); }
+.sp-bar { width: 190px; height: 4px; border-radius: 4px; background: rgba(63,216,255,.15); overflow: hidden; animation: spLogo .6s both .25s; }
+.sp-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg,#22d3ee,#8b5cf6,#d946ef); box-shadow: 0 0 12px #3fd8ff; animation: spFill .85s cubic-bezier(.6,0,.2,1) forwards .25s; }
+@keyframes spPop { from { opacity: 0; transform: scale(.5) translateY(20px); } }
+@keyframes spLogo { from { opacity: 0; letter-spacing: .3em; filter: blur(8px); } }
+@keyframes spFill { to { width: 100%; } }
+
+/* ---------- Palette de commandes ⌘K ---------- */
+.cmdk-scrim { position: fixed; inset: 0; z-index: 9500; background: rgba(2,3,12,.6); backdrop-filter: blur(6px); opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s; }
+.cmdk-scrim.open { opacity: 1; visibility: visible; }
+.cmdk {
+  position: fixed; z-index: 9501; left: 50%; top: 12vh; width: min(620px, calc(100vw - 28px)); transform: translate(-50%, -10px) scale(.98);
+  border-radius: 22px; border: 1.5px solid transparent; overflow: hidden; opacity: 0; visibility: hidden;
+  background: linear-gradient(170deg, rgba(14,18,56,.97), rgba(7,8,26,.98)) padding-box, var(--grad-border) border-box;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,.9), var(--neon-glow-strong);
+  transition: opacity .2s, transform .25s cubic-bezier(.2,.8,.2,1), visibility .2s;
+}
+.cmdk.open { opacity: 1; visibility: visible; transform: translate(-50%, 0) scale(1); }
+.cmdk-input { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid rgba(70,190,255,.18); }
+.cmdk-input svg { width: 20px; height: 20px; color: #7ff0ff; }
+.cmdk-input input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 16px; font-family: inherit; }
+.cmdk-input input::placeholder { color: #8a95c4; }
+.cmdk-list { max-height: 360px; overflow-y: auto; padding: 8px; }
+.cmdk-group { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #6f7bb0; padding: 10px 12px 6px; }
+.cmdk-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; color: #dfe5ff; cursor: pointer; font-weight: 600; font-size: 14.5px; }
+.cmdk-item .ci { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(63,216,255,.1); border: 1px solid rgba(63,216,255,.25); color: #7ff0ff; flex-shrink: 0; }
+.cmdk-item .ci svg { width: 18px; height: 18px; }
+.cmdk-item small { margin-left: auto; color: #7f8abb; font-weight: 500; font-size: 12px; }
+.cmdk-item.sel { background: linear-gradient(95deg, rgba(14,116,255,.35), rgba(139,92,246,.2)); box-shadow: inset 0 0 0 1px rgba(91,230,255,.5); color: #fff; }
+.cmdk-empty { padding: 26px; text-align: center; color: #8a95c4; font-size: 14px; }
+.cmdk-foot { display: flex; gap: 16px; padding: 10px 18px; border-top: 1px solid rgba(70,190,255,.14); font-size: 12px; color: #7f8abb; }
+.cmdk-foot b { display: inline-block; min-width: 20px; padding: 1px 6px; margin-right: 4px; border-radius: 6px; background: rgba(255,255,255,.08); color: #dfe5ff; font-weight: 600; text-align: center; }
+.topbar-search { cursor: pointer; }
+@media (max-width: 960px) { .cmdk-foot { display: none; } }
+
+/* ---------- Panneau de notifications ---------- */
+.notif-pop {
+  position: fixed; z-index: 9400; width: 340px; max-width: calc(100vw - 24px); border-radius: 20px; padding: 16px; opacity: 0; visibility: hidden;
+  transform: translateY(-8px) scale(.98); transform-origin: top right; border: 1.5px solid transparent;
+  background: linear-gradient(170deg, rgba(14,18,56,.97), rgba(7,8,26,.98)) padding-box, var(--grad-border) border-box;
+  box-shadow: 0 24px 60px -16px rgba(0,0,0,.9), var(--neon-glow);
+  transition: opacity .2s, transform .25s cubic-bezier(.2,.8,.2,1), visibility .2s;
+}
+.notif-pop.open { opacity: 1; visibility: visible; transform: none; }
+.notif-pop h4 { font-family: "Poppins", sans-serif; font-size: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.notif-empty { text-align: center; padding: 18px 10px 8px; color: #b4c2ea; font-size: 13px; line-height: 1.5; }
+.notif-empty .ne-ico { width: 54px; height: 54px; margin: 0 auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(63,216,255,.1); border: 1px solid rgba(63,216,255,.35); color: #7ff0ff; box-shadow: 0 0 18px rgba(63,216,255,.3); }
+.notif-empty .ne-ico svg { width: 26px; height: 26px; }
+.notif-empty strong { display: block; color: #fff; font-size: 14px; margin-bottom: 4px; }
+
+/* ---------- Bulle de la mascotte ---------- */
+.wh-robot { cursor: pointer; pointer-events: auto; }
+.wh-stage { pointer-events: none; }
+.wh-stage .wh-robot { pointer-events: auto; }
+.bubble {
+  position: absolute; z-index: 5; left: 50%; top: 4px; transform: translate(-112%, 0) scale(.6); transform-origin: right bottom; opacity: 0;
+  max-width: 230px; padding: 11px 14px; border-radius: 16px 16px 4px 16px; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: #fff;
+  background: linear-gradient(135deg, rgba(47,123,255,.95), rgba(139,92,246,.95)); border: 1px solid rgba(255,255,255,.35);
+  box-shadow: 0 0 24px rgba(99,102,241,.7), 0 10px 30px -10px rgba(0,0,0,.8);
+  transition: opacity .3s, transform .4s cubic-bezier(.2,1.4,.4,1); pointer-events: none;
+}
+.bubble.show { opacity: 1; transform: translate(-112%, 0) scale(1); }
+.wh-robot.jump { animation: robotJump .6s cubic-bezier(.3,1.6,.5,1) !important; }
+@keyframes robotJump { 30% { transform: translateY(-34px) rotate(-6deg) scale(1.04); } 60% { transform: translateY(0) rotate(3deg) scale(.97); } }
+@media (max-width: 960px) {
+  .bubble { left: 50%; top: -6px; transform: translate(-50%, -100%) scale(.6); transform-origin: center bottom; border-radius: 16px; max-width: 240px; text-align: center; }
+  .bubble.show { transform: translate(-50%, -100%) scale(1); }
+}
+
+/* ---------- Toasts premium ---------- */
+.toast-wrap { bottom: 30px; }
+.toast {
+  position: relative; overflow: hidden; border-radius: 16px; padding: 14px 20px 16px; font-size: 14px;
+  border: 1.5px solid transparent;
+  background: linear-gradient(170deg, rgba(14,18,56,.97), rgba(7,8,26,.98)) padding-box, var(--grad-border) border-box;
+  box-shadow: 0 20px 50px -14px rgba(0,0,0,.9), var(--neon-glow);
+}
+.toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3fd8ff; box-shadow: 0 0 10px #3fd8ff; flex-shrink: 0; }
+.toast.violet::before { background: #d08cff; box-shadow: 0 0 10px #b45cff; }
+.toast::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: linear-gradient(90deg,#22d3ee,#8b5cf6); transform-origin: left; animation: toastBar 2.8s linear forwards; }
+@keyframes toastBar { to { transform: scaleX(0); } }
+@media (max-width: 960px) { .toast-wrap { bottom: 100px; } }
+
+/* ---------- Petites finitions ---------- */
+::selection { background: rgba(63,216,255,.35); color: #fff; }
+.page-title > svg { animation: titleIco .8s cubic-bezier(.2,1.4,.4,1) backwards .15s; }
+@keyframes titleIco { from { opacity: 0; transform: scale(.4) rotate(-40deg); } }
+.sidebar-nav .nav-item { animation: navIn .5s cubic-bezier(.2,.8,.2,1) backwards; }
+.sidebar-nav .nav-item:nth-child(2) { animation-delay: .04s; } .sidebar-nav .nav-item:nth-child(3) { animation-delay: .08s; }
+.sidebar-nav .nav-item:nth-child(4) { animation-delay: .12s; } .sidebar-nav .nav-item:nth-child(5) { animation-delay: .16s; }
+.sidebar-nav .nav-item:nth-child(6) { animation-delay: .2s; } .sidebar-nav .nav-item:nth-child(7) { animation-delay: .24s; } .sidebar-nav .nav-item:nth-child(8) { animation-delay: .28s; }
+@keyframes navIn { from { opacity: 0; transform: translateX(-14px); } }
+.nav-item.active { animation: navIn .5s cubic-bezier(.2,.8,.2,1) backwards, navGlow 3s ease-in-out infinite .6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  #splash { display: none !important; }
+  .aurora, .nav-ind { display: none; }
+  .page-title > svg, .sidebar-nav .nav-item, .toast::after { animation: none !important; }
+}
+
+/* Visibilité immédiate à l'ouverture (permet le focus clavier), masquée après le fondu à la fermeture */
+.cmdk, .cmdk-scrim, .notif-pop { transition-property: opacity, transform, visibility; transition-duration: .2s, .25s, 0s; transition-delay: 0s, 0s, .25s; }
+.cmdk.open, .cmdk-scrim.open, .notif-pop.open { transition-delay: 0s, 0s, 0s; }
