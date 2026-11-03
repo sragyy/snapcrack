@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>CAROUBOT — Accueil</title>
+<title>CAROUBOT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/design-system.css"/>
 <link rel="stylesheet" href="assets/css/app.css"/>
+<link rel="stylesheet" href="assets/css/theme-neon.css"/>
 <link rel="stylesheet" href="assets/css/mascot.css"/>
 </head>
 <body>
@@ -24,120 +25,117 @@
   const I = window.ICON;
   const el = window.CAROUBOT_SHELL.pageEl;
   const creations = window.CAROUBOT_STORE.getCreations();
-  const nbCreations = creations.length;
-  const nbDone = creations.filter(c => c.status === "done").length;
+  const nb = creations.length;
 
   el.innerHTML = `
-    <div class="page-head" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
-      <div>
-        <h1 class="page-title">Bonjour 👋 <span class="gradient-text">bienvenue sur CAROUBOT</span></h1>
-        <p class="page-subtitle">Créez et analysez vos carrousels TikTok depuis un seul studio.</p>
+    <!-- Bandeau d'accueil -->
+    <section class="welcome-hero">
+      <div class="wh-copy">
+        <div class="wh-kicker">Bienvenue sur</div>
+        <h1 class="wh-title">CAROU<span>BOT</span></h1>
+        <p class="wh-sub">Crée, analyse et trouve les meilleurs carrousels TikTok en quelques clics !</p>
+        <p class="wh-sub-mobile">Crée, Analyse, Performe</p>
       </div>
-      ${window.CAROUBOT_MASCOT.inline(96)}
-    </div>
+      <div class="wh-stage" aria-hidden="true">
+        <div class="wh-ring r1"></div><div class="wh-ring r2"></div><div class="wh-ring r3"></div>
+        <div class="wh-beam"></div>
+        <div class="wh-float f1">${I.image}</div>
+        <div class="wh-float f2">${I.layers}</div>
+        <div class="wh-float f3">${I.sparkles}</div>
+        <img class="wh-robot" src="assets/img/caroubot-mascot.svg" alt="">
+      </div>
+    </section>
 
     <!-- Deux grandes cartes -->
-    <div class="grid grid-2" style="margin-bottom:22px">
-      <a href="carouslide.html" class="card card-hover card-glow hero-card hero-violet">
-        <div class="hero-ico">${I.slide}</div>
+    <div class="grid grid-2 hero-row">
+      <a href="carouslide.html" class="card hero-card hero-violet">
+        <div class="hero-ico">${I.image}</div>
         <div class="hero-txt">
-          <span class="badge badge-violet">Studio de génération</span>
           <h2>CarouSlide</h2>
-          <p class="text-muted">Importez vos slides ou un lien TikTok, choisissez vos variations et générez vos carrousels.</p>
+          <p>Génère des carrousels images IA ultra performants</p>
+          <span class="hero-short">Générer un carrousel IA</span>
         </div>
         <span class="hero-go">${I.arrowRight}</span>
       </a>
-      <a href="carouradar.html" class="card card-hover card-glow hero-card hero-cyan">
+      <a href="carouradar.html" class="card hero-card hero-cyan">
         <div class="hero-ico">${I.radar}</div>
         <div class="hero-txt">
-          <span class="badge badge-cyan">Veille & tendances</span>
           <h2>CarouRadar</h2>
-          <p class="text-muted">Repérez les carrousels TikTok les plus performants et envoyez-les vers CarouSlide.</p>
+          <p>Découvre les carrousels TikTok les plus performants</p>
+          <span class="hero-short">Découvrir les tops TikTok</span>
         </div>
         <span class="hero-go">${I.arrowRight}</span>
       </a>
     </div>
 
-    <!-- Stat tiles (valeurs réelles / placeholders honnêtes) -->
-    <div class="grid grid-4 stat-row" style="margin-bottom:22px">
+    <!-- Stat tiles : valeurs réelles ou "à connecter", jamais inventées -->
+    <div class="grid grid-4 stat-row">
       <div class="card stat-card">
-        <div class="stat-ico amber">${I.coin}</div>
-        <div><div class="stat-val mono">—</div><div class="stat-label">Crédits disponibles</div></div>
-        <span class="stat-flag" title="En attente de connexion au backend">${I.alert}</span>
+        <div class="stat-ico amber">${I.coins}</div>
+        <div><div class="stat-val mono">—</div><div class="stat-label">Crédits disponibles</div><span class="stat-soon">À connecter au bot</span></div>
       </div>
       <div class="card stat-card">
         <div class="stat-ico violet">${I.bolt}</div>
-        <div><div class="stat-val mono">${nbCreations}</div><div class="stat-label">Carrousels créés</div></div>
+        <div><div class="stat-val mono">${nb}</div><div class="stat-label">Carrousels créés</div></div>
       </div>
       <div class="card stat-card">
         <div class="stat-ico cyan">${I.chart}</div>
-        <div><div class="stat-val mono">—</div><div class="stat-label">Performance moyenne</div></div>
-        <span class="stat-flag" title="En attente de connexion au backend">${I.alert}</span>
+        <div><div class="stat-val mono">—</div><div class="stat-label">Performance moyenne</div><span class="stat-soon">À connecter</span></div>
       </div>
       <div class="card stat-card">
         <div class="stat-ico gold">${I.crown}</div>
-        <div><div class="stat-val" style="font-size:19px">Abonnement</div><div class="stat-label">— (en attente backend)</div></div>
+        <div><div class="stat-val" style="font-size:19px">Abonnement</div><div class="stat-label">Renouvellement : à connecter</div></div>
       </div>
-    </div>
-
-    <!-- Accès rapide -->
-    <div class="section-head"><h2 class="section-title">${I.bolt} Accès rapide</h2></div>
-    <div class="grid grid-4" style="margin-bottom:26px">
-      ${quick("carouslide.html", I.upload, "Nouvelle génération", "Importer des slides")}
-      ${quick("carouradar.html", I.trending, "Explorer les tendances", "CarouRadar France")}
-      ${quick("albums.html", I.folder, "Mes albums", "Organiser mes carrousels")}
-      ${quick("compte.html", I.cart, "Recharger des crédits", "Packs & abonnements")}
     </div>
 
     <!-- Mes créations récentes -->
-    <div class="section-head">
-      <h2 class="section-title">${I.layers} Mes créations récentes</h2>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="icon-btn" id="carPrev" aria-label="Précédent">${I.chevL}</button>
-        <button class="icon-btn" id="carNext" aria-label="Suivant">${I.chevR}</button>
-        <a href="creations.html" class="btn btn-ghost btn-sm">Voir tout ${I.arrowRight}</a>
+    <section class="card recent-panel">
+      <div class="section-head">
+        <h2 class="section-title">${I.image} Mes créations récentes</h2>
+        <a href="creations.html" class="btn btn-ghost btn-sm see-all">Voir tout ${I.arrowRight}</a>
       </div>
-    </div>
-    <div id="homeCreations"></div>
+      <div class="recent-wrap">
+        <button class="rc-arrow left" id="carPrev" aria-label="Précédent">${I.chevL}</button>
+        <div id="homeCreations" class="hcarousel"></div>
+        <button class="rc-arrow right" id="carNext" aria-label="Suivant">${I.chevR}</button>
+      </div>
+      <div class="rc-dots" id="rcDots"></div>
+    </section>
   `;
 
-  function quick(href, icon, title, sub) {
-    return `<a href="${href}" class="card card-hover quick-card">
-      <div class="quick-ico">${icon}</div>
-      <div><div class="quick-title">${title}</div><div class="quick-sub">${sub}</div></div>
-    </a>`;
+  const wrap = document.getElementById("homeCreations");
+  if (!nb) {
+    // Emplacements vides stylés (aucune création fictive)
+    wrap.innerHTML = [1,2,3,4].map(i => `
+      <a class="rc-card rc-empty" href="carouslide.html">
+        <span class="rc-plus">${I.plus}</span>
+        <strong>${i===1 ? "Ta première création" : "Emplacement libre"}</strong>
+        <small>${i===1 ? "Lance CarouSlide" : "Tes carrousels apparaîtront ici"}</small>
+      </a>`).join("");
+  } else {
+    wrap.innerHTML = creations.slice(0, 12).map(c => `
+      <a class="rc-card" href="creations.html">
+        <div class="rc-thumb">${I.slide}</div>
+        <strong class="rc-title">${c.title}</strong>
+        <span class="rc-meta">${I.image} ${c.slides} slides</span>
+        ${c.status === "pending_backend" ? `<span class="badge badge-warning rc-state">En attente</span>`
+          : c.status === "running" ? `<span class="badge badge-cyan rc-state">${c.progress}%</span>`
+          : `<span class="badge badge-success rc-state">Terminé</span>`}
+      </a>`).join("");
   }
 
-  const wrap = document.getElementById("homeCreations");
-  const prev = document.getElementById("carPrev");
-  const next = document.getElementById("carNext");
-  if (!nbCreations) {
-    prev.style.display = next.style.display = "none";
-    wrap.innerHTML = `<div class="empty">${I.layers}
-      <h4>Vous n'avez pas encore de création</h4>
-      <p class="section-sub">Lancez votre première génération depuis CarouSlide. Vos carrousels générés apparaîtront ici (aucun exemple fictif n'est affiché).</p>
-      <a class="btn btn-primary" href="carouslide.html" style="margin-top:14px">${I.slide} Ouvrir CarouSlide</a>
-    </div>`;
-  } else {
-    wrap.className = "hcarousel";
-    wrap.innerHTML = creations.slice(0, 12).map(c => `
-      <a class="card card-hover hcard" href="creations.html">
-        <div class="hcard-thumb">${I.slide}
-          ${c.status === "pending_backend"
-            ? `<span class="badge badge-warning hcard-badge"><span class="dot"></span>En attente</span>`
-            : c.status === "running"
-            ? `<span class="badge badge-cyan hcard-badge"><span class="dot"></span>${c.progress}%</span>`
-            : `<span class="badge badge-success hcard-badge"><span class="dot"></span>Terminé</span>`}
-        </div>
-        <div class="hcard-body">
-          <div class="hcard-title">${c.title}</div>
-          <div class="section-sub">${I.image} ${c.slides} slides · ${c.images} images · ${c.lang.toUpperCase()}</div>
-        </div>
-      </a>`).join("");
-    const step = () => (wrap.querySelector(".hcard")?.offsetWidth || 260) + 16;
-    prev.addEventListener("click", () => wrap.scrollBy({ left: -step() * 2, behavior: "smooth" }));
-    next.addEventListener("click", () => wrap.scrollBy({ left: step() * 2, behavior: "smooth" }));
+  // Défilement + points de pagination
+  const dots = document.getElementById("rcDots");
+  const pages = () => Math.max(1, Math.ceil(wrap.scrollWidth / wrap.clientWidth));
+  function drawDots() {
+    const n = pages(), cur = Math.round(wrap.scrollLeft / Math.max(1, wrap.clientWidth));
+    dots.innerHTML = n > 1 ? Array.from({length:n}, (_, i) => `<span class="${i===cur?'on':''}"></span>`).join("") : `<span class="on"></span>`;
   }
+  document.getElementById("carPrev").addEventListener("click", () => wrap.scrollBy({ left: -wrap.clientWidth, behavior: "smooth" }));
+  document.getElementById("carNext").addEventListener("click", () => wrap.scrollBy({ left: wrap.clientWidth, behavior: "smooth" }));
+  wrap.addEventListener("scroll", () => requestAnimationFrame(drawDots));
+  window.addEventListener("resize", drawDots);
+  drawDots();
 })();
 </script>
 </body>

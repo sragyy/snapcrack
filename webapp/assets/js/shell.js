@@ -34,24 +34,21 @@
   const sidebar = `
     <aside class="sidebar">
       <a class="sidebar-brand" href="index.html">
-        <div class="brand-logo">${window.CAROUBOT_MASCOT ? window.CAROUBOT_MASCOT.mark(34) : "C"}</div>
-        <div class="brand-name"><span class="bn-carou">CAROU</span><span class="bn-bot">BOT</span><small>STUDIO</small></div>
+        <div class="brand-logo">${window.CAROUBOT_MASCOT ? window.CAROUBOT_MASCOT.mark(72) : ""}</div>
+        <div class="brand-name"><span class="bn-carou">CAROU</span><span class="bn-bot">BOT</span></div>
       </a>
       <nav class="sidebar-nav">
-        <div class="nav-group-label">Navigation</div>
         ${NAV.map(n => `
           <a class="nav-item ${n.id===page?'active':''}" href="${n.href}">
-            ${n.icon}<span>${n.label}</span>${n.badge||''}
+            ${n.icon}<span>${n.label}</span>${n.id===page?`<i class="nav-chev">${I.chevR}</i>`:''}
           </a>`).join("")}
       </nav>
       <div class="sidebar-foot">
-        <div class="credits-pill">
-          <div class="ico">${I.coin}</div>
-          <div class="credits-text">
-            <div class="credits-amount mono">${creditsText}</div>
-            <div class="credits-label">crédits CAROUBOT</div>
-          </div>
-        </div>
+        <a class="account-pill" href="compte.html">
+          <span class="account-ico">${I.account}</span>
+          <span class="credits-text">Mon compte</span>
+          <i class="nav-chev">${I.chevR}</i>
+        </a>
       </div>
     </aside>
     <div class="sidebar-scrim" data-close-sidebar></div>`;
@@ -60,24 +57,19 @@
   const topbar = `
     <header class="topbar">
       <button class="icon-btn topbar-toggle" id="btnSidebarToggle" aria-label="Menu">${I.menu}</button>
+      <a class="topbar-brand" href="index.html">${window.CAROUBOT_MASCOT ? window.CAROUBOT_MASCOT.mark(34) : ""}<span class="bn-carou">CAROU</span><span class="bn-bot">BOT</span></a>
       <label class="topbar-search">
         ${I.search}
         <input type="search" placeholder="Rechercher un projet, un album…" aria-label="Rechercher"/>
         <span class="kbd">⌘ K</span>
       </label>
       <div class="topbar-right">
-        <div class="credits-chip" title="Solde de crédits">
-          ${I.coin}<span class="mono">${creditsText}</span><span class="credits-chip-label">crédits</span>
+        <button class="icon-btn bell-btn" aria-label="Notifications">${I.bell}<span class="ping"></span></button>
+        <div class="credits-chip" title="Solde de crédits (non connecté)">
+          <span class="coins">${I.coins}</span><span class="mono">${creditsText}</span><span class="credits-chip-label">crédits</span>
           <a class="credits-add" href="compte.html" aria-label="Recharger des crédits">${I.plus}</a>
         </div>
-        <button class="icon-btn" aria-label="Notifications">${I.bell}<span class="ping"></span></button>
-        <button class="profile-btn" aria-label="Profil">
-          <span class="avatar">U</span>
-          <span>
-            <span class="pname">Mon compte</span><br>
-            <span class="pmail">Non connecté</span>
-          </span>
-        </button>
+        <a class="avatar-btn" href="compte.html" aria-label="Mon compte">${I.account}</a>
       </div>
     </header>`;
 

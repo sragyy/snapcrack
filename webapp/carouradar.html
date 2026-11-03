@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/design-system.css"/>
 <link rel="stylesheet" href="assets/css/app.css"/>
+<link rel="stylesheet" href="assets/css/theme-neon.css"/>
 </head>
 <body>
 <div id="app"></div>
@@ -95,8 +96,8 @@
       renderResults();
     } catch (e) {
       state.collected = true; state.results = [];
-      document.getElementById("radarResults").innerHTML = `
-        <div class="card">
+      document.getElementById("radarResults").innerHTML = skeletons("Top carrousels", "Les classements réels s'afficheront dans ces emplacements.") + `
+        <div class="card" style="margin-top:18px">
           <div class="notice">${I.alert} ${e.notConnected
             ? "Backend CarouRadar non connecté. Aucune collecte réelle n'est effectuée et aucune donnée n'est inventée. Une fois le service relié (<code>" + CFG.api.radarSearch + "</code>), les carrousels tendance s'afficheront ici."
             : "La collecte a échoué : " + (e.message||e)}</div>
@@ -108,12 +109,24 @@
     }
   }
 
+  function skeletons(title, sub) {
+    return `
+      <div class="radar-skel-head"><div><h3 class="section-title">${I.trending} ${title}</h3><p class="section-sub">${sub}</p></div><span class="badge badge-warning"><span class="dot"></span>Non connecté</span></div>
+      <div class="grid grid-3 radar-skel">
+        ${[1,2,3].map(n => `
+          <div class="card rk-card">
+            <span class="rk-rank">#${n}</span>
+            <div class="rk-thumb">${I.slide}</div>
+            <div class="rk-lines"><i></i><i></i></div>
+            <div class="rk-actions"><span class="btn btn-ghost btn-sm" aria-disabled="true">${I.play} Voir</span><span class="btn btn-cyan btn-sm" aria-disabled="true">Utiliser</span></div>
+          </div>`).join("")}
+      </div>`;
+  }
+
   function renderResults() {
     const wrap = document.getElementById("radarResults");
     if (!state.collected) {
-      wrap.innerHTML = `<div class="empty">${I.radar}
-        <h4>Lancez une collecte pour voir les tendances</h4>
-        <p class="section-sub">Choisissez un pays, une période et un classement, puis cliquez sur « Lancer la collecte ». Aucune collecte automatique n'est effectuée.</p></div>`;
+      wrap.innerHTML = skeletons("Top carrousels · France", "Choisis une période et un classement, puis lance la collecte. Aucune collecte automatique n'est effectuée.");
       return;
     }
     if (!state.results.length) { return; } // notice déjà affichée par collect()
